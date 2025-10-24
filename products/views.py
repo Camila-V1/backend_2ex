@@ -80,8 +80,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         product = self.get_object()
         
         # Productos comprados junto con el producto actual
+        # Usa 'order_items' (related_name en OrderItem)
         recommended = Product.objects.filter(
-            orderitem__order__items__product_id=pk,
+            order_items__order__items__product_id=pk,
             is_active=True
         ).exclude(
             id=pk

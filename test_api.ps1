@@ -1,5 +1,5 @@
-﻿# Script de Testing Completo - API E-Commerce SmartSales365
-# Prueba TODOS los endpoints de la API (53 endpoints en 13 categorías)
+# Script de Testing Completo - API E-Commerce SmartSales365
+# Prueba TODOS los endpoints de la API (53 endpoints en 13 categor�as)
 # Incluye: Auth, Users, Products, Categories, Orders, NLP Cart, Admin, Reports, ML, Reviews, Recommendations, Cache
 # Uso: .\test_api.ps1
 
@@ -15,7 +15,7 @@ Write-Host "`n================================================" -ForegroundColor
 Write-Host "CATEGORIA 1: AUTENTICACION JWT (3 endpoints)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[1/45] POST /api/token/" -ForegroundColor Yellow
+Write-Host "`n[1/53] POST /api/token/" -ForegroundColor Yellow
 $loginBody = @{ username = "admin"; password = "admin123" } | ConvertTo-Json
 try {
     $loginResponse = Invoke-RestMethod -Uri "$BASE_URL/api/token/" -Method Post -Body $loginBody -ContentType "application/json"
@@ -29,7 +29,7 @@ try {
     exit 1
 }
 
-Write-Host "`n[2/45] POST /api/token/refresh/" -ForegroundColor Yellow
+Write-Host "`n[2/53] POST /api/token/refresh/" -ForegroundColor Yellow
 $refreshBody = @{ refresh = $REFRESH_TOKEN } | ConvertTo-Json
 try {
     $newToken = Invoke-RestMethod -Uri "$BASE_URL/api/token/refresh/" -Method Post -Body $refreshBody -ContentType "application/json"
@@ -40,7 +40,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[3/45] POST /api/token/verify/" -ForegroundColor Yellow
+Write-Host "`n[3/53] POST /api/token/verify/" -ForegroundColor Yellow
 $verifyBody = @{ token = $ACCESS_TOKEN } | ConvertTo-Json
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/token/verify/" -Method Post -Body $verifyBody -ContentType "application/json" -ErrorAction Stop | Out-Null
@@ -58,7 +58,7 @@ Write-Host "`n================================================" -ForegroundColor
 Write-Host "CATEGORIA 2: USUARIOS (7 endpoints)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[4/45] GET /api/users/" -ForegroundColor Yellow
+Write-Host "`n[4/53] GET /api/users/" -ForegroundColor Yellow
 try {
     $users = Invoke-RestMethod -Uri "$BASE_URL/api/users/" -Method Get -Headers $headers
     Write-Host "OK - Usuarios: $($users.Count)" -ForegroundColor Green
@@ -68,7 +68,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[5/45] GET /api/users/profile/" -ForegroundColor Yellow
+Write-Host "`n[5/53] GET /api/users/profile/" -ForegroundColor Yellow
 try {
     $userProfile = Invoke-RestMethod -Uri "$BASE_URL/api/users/profile/" -Method Get -Headers $headers
     Write-Host "OK - Perfil: $($userProfile.email)" -ForegroundColor Green
@@ -79,7 +79,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[6/45] GET /api/users/$USER_ID/" -ForegroundColor Yellow
+Write-Host "`n[6/53] GET /api/users/$USER_ID/" -ForegroundColor Yellow
 try {
     $userDetail = Invoke-RestMethod -Uri "$BASE_URL/api/users/$USER_ID/" -Method Get -Headers $headers
     Write-Host "OK - Usuario: $($userDetail.email)" -ForegroundColor Green
@@ -89,7 +89,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[7/45] POST /api/users/" -ForegroundColor Yellow
+Write-Host "`n[7/53] POST /api/users/" -ForegroundColor Yellow
 $newUserBody = @{ username = "testuser$(Get-Random)"; email = "test_$(Get-Random)@example.com"; password = "testpass123"; password2 = "testpass123"; first_name = "Test"; last_name = "User"; role = "CAJERO" } | ConvertTo-Json
 try {
     $newUser = Invoke-RestMethod -Uri "$BASE_URL/api/users/" -Method Post -Body $newUserBody -ContentType "application/json"
@@ -101,7 +101,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[8/45] PATCH /api/users/$USER_ID/" -ForegroundColor Yellow
+Write-Host "`n[8/53] PATCH /api/users/$USER_ID/" -ForegroundColor Yellow
 $updateBody = @{ first_name = "Updated" } | ConvertTo-Json
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/users/$USER_ID/" -Method Patch -Headers $headers -Body $updateBody | Out-Null
@@ -112,7 +112,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[9/45] PUT /api/users/$USER_ID/" -ForegroundColor Yellow
+Write-Host "`n[9/53] PUT /api/users/$USER_ID/" -ForegroundColor Yellow
 $updateFullBody = @{ email = $userProfile.email; first_name = "Admin"; last_name = "User" } | ConvertTo-Json
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/users/$USER_ID/" -Method Put -Headers $headers -Body $updateFullBody | Out-Null
@@ -124,7 +124,7 @@ try {
 }
 
 if ($NEW_USER_ID) {
-    Write-Host "`n[10/45] DELETE /api/users/$NEW_USER_ID/" -ForegroundColor Yellow
+    Write-Host "`n[10/53] DELETE /api/users/$NEW_USER_ID/" -ForegroundColor Yellow
     try {
         Invoke-RestMethod -Uri "$BASE_URL/api/users/$NEW_USER_ID/" -Method Delete -Headers $headers | Out-Null
         Write-Host "OK - Usuario eliminado" -ForegroundColor Green
@@ -140,7 +140,7 @@ Write-Host "`n================================================" -ForegroundColor
 Write-Host "CATEGORIA 3: PRODUCTOS (6 endpoints)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[11/45] GET /api/products/" -ForegroundColor Yellow
+Write-Host "`n[11/53] GET /api/products/" -ForegroundColor Yellow
 try {
     $products = Invoke-RestMethod -Uri "$BASE_URL/api/products/" -Method Get
     Write-Host "OK - Productos: $($products.Count)" -ForegroundColor Green
@@ -151,7 +151,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[12/45] GET /api/products/$PRODUCT_ID/" -ForegroundColor Yellow
+Write-Host "`n[12/53] GET /api/products/$PRODUCT_ID/" -ForegroundColor Yellow
 try {
     $productDetail = Invoke-RestMethod -Uri "$BASE_URL/api/products/$PRODUCT_ID/" -Method Get
     Write-Host "OK - Producto: $($productDetail.name) - Precio: $($productDetail.price)" -ForegroundColor Green
@@ -161,7 +161,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[13/45] POST /api/products/" -ForegroundColor Yellow
+Write-Host "`n[13/53] POST /api/products/" -ForegroundColor Yellow
 $newProductBody = @{ name = "Producto Test $(Get-Random)"; description = "Producto de prueba"; price = "99.99"; stock = 50; category = 14 } | ConvertTo-Json
 try {
     $newProduct = Invoke-RestMethod -Uri "$BASE_URL/api/products/" -Method Post -Headers $headers -Body $newProductBody -ContentType "application/json"
@@ -174,7 +174,7 @@ try {
 }
 
 if ($NEW_PRODUCT_ID) {
-    Write-Host "`n[14/45] PATCH /api/products/$NEW_PRODUCT_ID/" -ForegroundColor Yellow
+    Write-Host "`n[14/53] PATCH /api/products/$NEW_PRODUCT_ID/" -ForegroundColor Yellow
     $updateProductBody = @{ price = "149.99" } | ConvertTo-Json
     try {
         $updatedProd = Invoke-RestMethod -Uri "$BASE_URL/api/products/$NEW_PRODUCT_ID/" -Method Patch -Headers $headers -Body $updateProductBody -ContentType "application/json"
@@ -185,7 +185,7 @@ if ($NEW_PRODUCT_ID) {
         $testResults.failed++
     }
 
-    Write-Host "`n[15/45] PUT /api/products/$NEW_PRODUCT_ID/" -ForegroundColor Yellow
+    Write-Host "`n[15/53] PUT /api/products/$NEW_PRODUCT_ID/" -ForegroundColor Yellow
     $updateProductFullBody = @{ name = "Producto Updated"; description = "Nueva desc"; price = "199.99"; stock = 100; category = 14 } | ConvertTo-Json
     try {
         $fullyUpdated = Invoke-RestMethod -Uri "$BASE_URL/api/products/$NEW_PRODUCT_ID/" -Method Put -Headers $headers -Body $updateProductFullBody -ContentType "application/json"
@@ -196,7 +196,7 @@ if ($NEW_PRODUCT_ID) {
         $testResults.failed++
     }
 
-    Write-Host "`n[16/45] DELETE /api/products/$NEW_PRODUCT_ID/" -ForegroundColor Yellow
+    Write-Host "`n[16/53] DELETE /api/products/$NEW_PRODUCT_ID/" -ForegroundColor Yellow
     try {
         Invoke-RestMethod -Uri "$BASE_URL/api/products/$NEW_PRODUCT_ID/" -Method Delete -Headers $headers | Out-Null
         Write-Host "OK - Producto eliminado" -ForegroundColor Green
@@ -212,7 +212,7 @@ Write-Host "`n================================================" -ForegroundColor
 Write-Host "CATEGORIA 4: CATEGORIAS (6 endpoints)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[17/45] GET /api/products/categories/" -ForegroundColor Yellow
+Write-Host "`n[17/53] GET /api/products/categories/" -ForegroundColor Yellow
 try {
     $categories = Invoke-RestMethod -Uri "$BASE_URL/api/products/categories/" -Method Get
     Write-Host "OK - Categorias: $($categories.Count)" -ForegroundColor Green
@@ -223,7 +223,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[18/45] GET /api/products/categories/$CATEGORY_ID/" -ForegroundColor Yellow
+Write-Host "`n[18/53] GET /api/products/categories/$CATEGORY_ID/" -ForegroundColor Yellow
 try {
     $categoryDetail = Invoke-RestMethod -Uri "$BASE_URL/api/products/categories/$CATEGORY_ID/" -Method Get
     Write-Host "OK - Categoria: $($categoryDetail.name)" -ForegroundColor Green
@@ -233,7 +233,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[19/45] POST /api/products/categories/" -ForegroundColor Yellow
+Write-Host "`n[19/53] POST /api/products/categories/" -ForegroundColor Yellow
 $newCategoryBody = @{ name = "Categoria Test $(Get-Random)"; description = "Categoria de prueba" } | ConvertTo-Json
 try {
     $newCategory = Invoke-RestMethod -Uri "$BASE_URL/api/products/categories/" -Method Post -Headers $headers -Body $newCategoryBody -ContentType "application/json"
@@ -246,7 +246,7 @@ try {
 }
 
 if ($NEW_CATEGORY_ID) {
-    Write-Host "`n[20/45] PATCH /api/products/categories/$NEW_CATEGORY_ID/" -ForegroundColor Yellow
+    Write-Host "`n[20/53] PATCH /api/products/categories/$NEW_CATEGORY_ID/" -ForegroundColor Yellow
     try {
         $updatedCat = Invoke-RestMethod -Uri "$BASE_URL/api/products/categories/$NEW_CATEGORY_ID/" -Method Patch -Headers $headers -Body (@{ description = "Nueva descripcion actualizada" } | ConvertTo-Json) -ContentType "application/json"
         Write-Host "OK - Categoria actualizada: $($updatedCat.description)" -ForegroundColor Green
@@ -256,7 +256,7 @@ if ($NEW_CATEGORY_ID) {
         $testResults.failed++
     }
 
-    Write-Host "`n[21/45] PUT /api/products/categories/$NEW_CATEGORY_ID/" -ForegroundColor Yellow
+    Write-Host "`n[21/53] PUT /api/products/categories/$NEW_CATEGORY_ID/" -ForegroundColor Yellow
     try {
         $fullyCat = Invoke-RestMethod -Uri "$BASE_URL/api/products/categories/$NEW_CATEGORY_ID/" -Method Put -Headers $headers -Body (@{ name = "Cat Updated"; description = "Desc updated" } | ConvertTo-Json) -ContentType "application/json"
         Write-Host "OK - Categoria actualizada completamente: $($fullyCat.name)" -ForegroundColor Green
@@ -266,7 +266,7 @@ if ($NEW_CATEGORY_ID) {
         $testResults.failed++
     }
 
-    Write-Host "`n[22/45] DELETE /api/products/categories/$NEW_CATEGORY_ID/" -ForegroundColor Yellow
+    Write-Host "`n[22/53] DELETE /api/products/categories/$NEW_CATEGORY_ID/" -ForegroundColor Yellow
     try {
         Invoke-RestMethod -Uri "$BASE_URL/api/products/categories/$NEW_CATEGORY_ID/" -Method Delete -Headers $headers | Out-Null
         Write-Host "OK - Categoria eliminada" -ForegroundColor Green
@@ -282,7 +282,7 @@ Write-Host "`n================================================" -ForegroundColor
 Write-Host "CATEGORIA 5: ORDENES USUARIO (5 endpoints)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[23/45] GET /api/orders/" -ForegroundColor Yellow
+Write-Host "`n[23/53] GET /api/orders/" -ForegroundColor Yellow
 try {
     $myOrders = Invoke-RestMethod -Uri "$BASE_URL/api/orders/" -Method Get -Headers $headers
     Write-Host "OK - Mis ordenes: $($myOrders.Count)" -ForegroundColor Green
@@ -292,7 +292,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[24/45] POST /api/orders/create/" -ForegroundColor Yellow
+Write-Host "`n[24/53] POST /api/orders/create/" -ForegroundColor Yellow
 $orderBody = @{ items = @(@{ product_id = $PRODUCT_ID; quantity = 2 }) } | ConvertTo-Json -Depth 3
 try {
     $order = Invoke-RestMethod -Uri "$BASE_URL/api/orders/create/" -Method Post -Headers $headers -Body $orderBody -ContentType "application/json"
@@ -304,7 +304,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[25/45] GET /api/orders/$ORDER_ID/" -ForegroundColor Yellow
+Write-Host "`n[25/53] GET /api/orders/$ORDER_ID/" -ForegroundColor Yellow
 if ($ORDER_ID) {
     try {
         $orderDetail = Invoke-RestMethod -Uri "$BASE_URL/api/orders/$ORDER_ID/" -Method Get -Headers $headers
@@ -319,7 +319,7 @@ if ($ORDER_ID) {
     $testResults.warnings++
 }
 
-Write-Host "`n[26/45] POST /api/orders/$ORDER_ID/create-checkout-session/" -ForegroundColor Yellow
+Write-Host "`n[26/53] POST /api/orders/$ORDER_ID/create-checkout-session/" -ForegroundColor Yellow
 if ($ORDER_ID) {
     try {
         $checkout = Invoke-RestMethod -Uri "$BASE_URL/api/orders/$ORDER_ID/create-checkout-session/" -Method Post -Headers $headers -ContentType "application/json"
@@ -334,7 +334,7 @@ if ($ORDER_ID) {
     $testResults.warnings++
 }
 
-Write-Host "`n[27/45] POST /api/orders/stripe-webhook/ - INFO ONLY" -ForegroundColor Yellow
+Write-Host "`n[27/53] POST /api/orders/stripe-webhook/ - INFO ONLY" -ForegroundColor Yellow
 Write-Host "WARNING - Webhook de Stripe (solo para Stripe)" -ForegroundColor Yellow
 $testResults.warnings++
 
@@ -343,7 +343,7 @@ Write-Host "`n================================================" -ForegroundColor
 Write-Host "CATEGORIA 6: CARRITO CON LENGUAJE NATURAL (2 endpoints)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[28/45] POST /api/orders/cart/add-natural-language/" -ForegroundColor Yellow
+Write-Host "`n[28/53] POST /api/orders/cart/add-natural-language/" -ForegroundColor Yellow
 $nlpBody = @{ prompt = "Quiero 1 laptop" } | ConvertTo-Json
 try {
     $nlpResponse = Invoke-RestMethod -Uri "$BASE_URL/api/orders/cart/add-natural-language/" -Method Post -Headers $headers -Body $nlpBody -ContentType "application/json"
@@ -358,7 +358,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[29/45] GET /api/orders/cart/suggestions/?q=smart" -ForegroundColor Yellow
+Write-Host "`n[29/53] GET /api/orders/cart/suggestions/?q=smart" -ForegroundColor Yellow
 try {
     $suggestions = Invoke-RestMethod -Uri "$BASE_URL/api/orders/cart/suggestions/?q=smart" -Method Get
     Write-Host "OK - Sugerencias: $($suggestions.suggestions.Count)" -ForegroundColor Green
@@ -373,7 +373,7 @@ Write-Host "`n================================================" -ForegroundColor
 Write-Host "CATEGORIA 7: ORDENES ADMIN (6 endpoints)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[30/45] GET /api/orders/admin/ (lista todas las ordenes)" -ForegroundColor Yellow
+Write-Host "`n[30/53] GET /api/orders/admin/ (lista todas las ordenes)" -ForegroundColor Yellow
 try {
     # SimpleRouter genera la lista sin trailing slash por defecto
     $allOrders = Invoke-RestMethod -Uri "$BASE_URL/api/orders/admin" -Method Get -Headers $headers
@@ -399,7 +399,7 @@ try {
     }
 }
 
-Write-Host "`n[31/45] GET /api/orders/admin/$ORDER_ID/" -ForegroundColor Yellow
+Write-Host "`n[31/53] GET /api/orders/admin/$ORDER_ID/" -ForegroundColor Yellow
 if ($ORDER_ID) {
     try {
         $adminOrder = Invoke-RestMethod -Uri "$BASE_URL/api/orders/admin/$ORDER_ID/" -Method Get -Headers $headers
@@ -414,7 +414,7 @@ if ($ORDER_ID) {
     $testResults.warnings++
 }
 
-Write-Host "`n[32/45] PATCH /api/orders/admin/$ORDER_ID/update_status/" -ForegroundColor Yellow
+Write-Host "`n[32/53] PATCH /api/orders/admin/$ORDER_ID/update_status/" -ForegroundColor Yellow
 if ($ORDER_ID) {
     $statusBody = @{ status = "shipped" } | ConvertTo-Json
     try {
@@ -430,7 +430,7 @@ if ($ORDER_ID) {
     $testResults.warnings++
 }
 
-Write-Host "`n[33/45] GET /api/orders/admin/dashboard/" -ForegroundColor Yellow
+Write-Host "`n[33/53] GET /api/orders/admin/dashboard/" -ForegroundColor Yellow
 try {
     $dashboard = Invoke-RestMethod -Uri "$BASE_URL/api/orders/admin/dashboard/" -Method Get -Headers $headers
     Write-Host "OK - Dashboard: Revenue=$($dashboard.total_revenue) | Ordenes=$($dashboard.total_orders)" -ForegroundColor Green
@@ -440,7 +440,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[34/45] GET /api/orders/admin/users/" -ForegroundColor Yellow
+Write-Host "`n[34/53] GET /api/orders/admin/users/" -ForegroundColor Yellow
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/orders/admin/users/" -Method Get -Headers $headers | Out-Null
     Write-Host "OK - Usuarios admin obtenidos" -ForegroundColor Green
@@ -450,7 +450,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[35/45] GET /api/orders/admin/analytics/sales/" -ForegroundColor Yellow
+Write-Host "`n[35/53] GET /api/orders/admin/analytics/sales/" -ForegroundColor Yellow
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/orders/admin/analytics/sales/" -Method Get -Headers $headers | Out-Null
     Write-Host "OK - Analytics obtenido" -ForegroundColor Green
@@ -465,7 +465,7 @@ Write-Host "`n================================================" -ForegroundColor
 Write-Host "CATEGORIA 8: REPORTES (6 endpoints)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[36/45] GET /api/reports/sales/?format=pdf" -ForegroundColor Yellow
+Write-Host "`n[36/53] GET /api/reports/sales/?format=pdf" -ForegroundColor Yellow
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/reports/sales/?format=pdf&start_date=2025-10-01&end_date=2025-10-31" -Method Get -Headers $headers -OutFile "$env:TEMP\sales.pdf"
     Write-Host "OK - Reporte ventas PDF: $env:TEMP\sales.pdf" -ForegroundColor Green
@@ -475,7 +475,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[37/45] GET /api/reports/sales/?format=excel" -ForegroundColor Yellow
+Write-Host "`n[37/53] GET /api/reports/sales/?format=excel" -ForegroundColor Yellow
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/reports/sales/?format=excel&start_date=2025-10-01&end_date=2025-10-31" -Method Get -Headers $headers -OutFile "$env:TEMP\sales.xlsx"
     Write-Host "OK - Reporte ventas Excel: $env:TEMP\sales.xlsx" -ForegroundColor Green
@@ -485,7 +485,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[38/45] GET /api/reports/products/?format=pdf" -ForegroundColor Yellow
+Write-Host "`n[38/53] GET /api/reports/products/?format=pdf" -ForegroundColor Yellow
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/reports/products/?format=pdf" -Method Get -Headers $headers -OutFile "$env:TEMP\products.pdf"
     Write-Host "OK - Reporte productos PDF: $env:TEMP\products.pdf" -ForegroundColor Green
@@ -495,7 +495,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[39/45] GET /api/reports/products/?format=excel" -ForegroundColor Yellow
+Write-Host "`n[39/53] GET /api/reports/products/?format=excel" -ForegroundColor Yellow
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/reports/products/?format=excel" -Method Get -Headers $headers -OutFile "$env:TEMP\products.xlsx"
     Write-Host "OK - Reporte productos Excel: $env:TEMP\products.xlsx" -ForegroundColor Green
@@ -505,7 +505,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[40/45] POST /api/reports/dynamic-parser/" -ForegroundColor Yellow
+Write-Host "`n[40/53] POST /api/reports/dynamic-parser/" -ForegroundColor Yellow
 $reportPromptBody = @{ prompt = "Quiero un reporte de ventas del mes de octubre en PDF" } | ConvertTo-Json
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/reports/dynamic-parser/" -Method Post -Headers $headers -Body $reportPromptBody -ContentType "application/json" -OutFile "$env:TEMP\dynamic.pdf"
@@ -555,10 +555,10 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[41/45] GET /api/orders/$ORDER_ID/invoice/" -ForegroundColor Yellow
+Write-Host "`n[41/53] GET /api/orders/$ORDER_ID/invoice/" -ForegroundColor Yellow
 if ($ORDER_ID) {
     try {
-        # La ruta está bajo reports.urls que se incluye con prefijo 'api/'
+        # La ruta est� bajo reports.urls que se incluye con prefijo 'api/'
         Invoke-RestMethod -Uri "$BASE_URL/api/orders/$ORDER_ID/invoice/" -Method Get -Headers $headers -OutFile "$env:TEMP\invoice.pdf"
         Write-Host "OK - Comprobante: $env:TEMP\invoice.pdf" -ForegroundColor Green
         $testResults.passed++
@@ -583,7 +583,7 @@ Write-Host "`n================================================" -ForegroundColor
 Write-Host "CATEGORIA 9: PREDICCIONES ML (1 endpoint)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[42/45] GET /api/predictions/sales/" -ForegroundColor Yellow
+Write-Host "`n[42/53] GET /api/predictions/sales/" -ForegroundColor Yellow
 try {
     $predictions = Invoke-RestMethod -Uri "$BASE_URL/api/predictions/sales/" -Method Get -Headers $headers
     Write-Host "OK - Predicciones: $($predictions.predictions.Count) dias" -ForegroundColor Green
@@ -598,7 +598,7 @@ Write-Host "`n================================================" -ForegroundColor
 Write-Host "CATEGORIA 10: DOCUMENTACION API (3 endpoints)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[43/45] GET /api/docs/" -ForegroundColor Yellow
+Write-Host "`n[43/53] GET /api/docs/" -ForegroundColor Yellow
 try {
     $swagger = Invoke-WebRequest -Uri "$BASE_URL/api/docs/" -Method Get -UseBasicParsing
     if ($swagger.StatusCode -eq 200) {
@@ -610,7 +610,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[44/45] GET /api/redoc/" -ForegroundColor Yellow
+Write-Host "`n[44/53] GET /api/redoc/" -ForegroundColor Yellow
 try {
     $redoc = Invoke-WebRequest -Uri "$BASE_URL/api/redoc/" -Method Get -UseBasicParsing
     if ($redoc.StatusCode -eq 200) {
@@ -622,7 +622,7 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[45/45] GET /api/schema/" -ForegroundColor Yellow
+Write-Host "`n[45/53] GET /api/schema/" -ForegroundColor Yellow
 try {
     Invoke-RestMethod -Uri "$BASE_URL/api/schema/" -Method Get | Out-Null
     Write-Host "OK - OpenAPI Schema disponible" -ForegroundColor Green
@@ -632,16 +632,16 @@ try {
     $testResults.failed++
 }
 
-# CATEGORIA 11: SISTEMA DE RESEÑAS (5 endpoints)
+# CATEGORIA 11: SISTEMA DE RESE�AS (5 endpoints)
 Write-Host "`n================================================" -ForegroundColor Cyan
-Write-Host "CATEGORIA 11: SISTEMA DE RESEÑAS (5 endpoints)" -ForegroundColor Cyan
+Write-Host "CATEGORIA 11: SISTEMA DE RESE�AS (5 endpoints)" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 
-Write-Host "`n[46/53] POST /api/products/$PRODUCT_ID/reviews/ - Crear reseña" -ForegroundColor Yellow
-$reviewBody = @{ rating = 5; comment = "Excelente producto, muy recomendado!" } | ConvertTo-Json
+Write-Host "`n[46/53] POST /api/products/reviews/ - Crear reseña" -ForegroundColor Yellow
+$reviewBody = @{ product = $PRODUCT_ID; rating = 5; comment = "Excelente producto, muy recomendado!" } | ConvertTo-Json
 $REVIEW_ID = $null
 try {
-    $review = Invoke-RestMethod -Uri "$BASE_URL/api/products/$PRODUCT_ID/reviews/" -Method Post -Headers $headers -Body $reviewBody -ContentType "application/json"
+    $review = Invoke-RestMethod -Uri "$BASE_URL/api/products/reviews/" -Method Post -Headers $headers -Body $reviewBody -ContentType "application/json"
     $REVIEW_ID = $review.id
     Write-Host "OK - Reseña creada: ID $REVIEW_ID - Rating: $($review.rating)★" -ForegroundColor Green
     $testResults.passed++
@@ -650,32 +650,32 @@ try {
     $testResults.failed++
 }
 
-Write-Host "`n[47/53] GET /api/products/$PRODUCT_ID/reviews/ - Listar reseñas del producto" -ForegroundColor Yellow
+Write-Host "`n[47/53] GET /api/products/$PRODUCT_ID/reviews/ - Listar rese�as del producto" -ForegroundColor Yellow
 try {
     $reviews = Invoke-RestMethod -Uri "$BASE_URL/api/products/$PRODUCT_ID/reviews/" -Method Get
-    Write-Host "OK - Reseñas: $($reviews.count) | Rating promedio: $($reviews.average_rating)★" -ForegroundColor Green
+    Write-Host "OK - Rese�as: $($reviews.count) | Rating promedio: $($reviews.average_rating)?" -ForegroundColor Green
     $testResults.passed++
 } catch {
     Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
     $testResults.failed++
 }
 
-Write-Host "`n[48/53] GET /api/products/reviews/?product=$PRODUCT_ID - Filtrar reseñas" -ForegroundColor Yellow
+Write-Host "`n[48/53] GET /api/products/reviews/?product=$PRODUCT_ID - Filtrar rese�as" -ForegroundColor Yellow
 try {
     $filteredReviews = Invoke-RestMethod -Uri "$BASE_URL/api/products/reviews/?product=$PRODUCT_ID" -Method Get
-    Write-Host "OK - Reseñas filtradas: $($filteredReviews.Count)" -ForegroundColor Green
+    Write-Host "OK - Rese�as filtradas: $($filteredReviews.Count)" -ForegroundColor Green
     $testResults.passed++
 } catch {
     Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
     $testResults.failed++
 }
 
-Write-Host "`n[49/53] PATCH /api/products/reviews/$REVIEW_ID/ - Actualizar reseña" -ForegroundColor Yellow
+Write-Host "`n[49/53] PATCH /api/products/reviews/$REVIEW_ID/ - Actualizar rese�a" -ForegroundColor Yellow
 if ($REVIEW_ID) {
-    $updateReviewBody = @{ rating = 4; comment = "Muy bueno, actualización de mi reseña" } | ConvertTo-Json
+    $updateReviewBody = @{ rating = 4; comment = "Muy bueno, actualizaci�n de mi rese�a" } | ConvertTo-Json
     try {
         $updated = Invoke-RestMethod -Uri "$BASE_URL/api/products/reviews/$REVIEW_ID/" -Method Patch -Headers $headers -Body $updateReviewBody -ContentType "application/json"
-        Write-Host "OK - Reseña actualizada: Rating=$($updated.rating)★" -ForegroundColor Green
+        Write-Host "OK - Rese�a actualizada: Rating=$($updated.rating)?" -ForegroundColor Green
         $testResults.passed++
     } catch {
         Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
@@ -683,11 +683,11 @@ if ($REVIEW_ID) {
     }
 }
 
-Write-Host "`n[50/53] DELETE /api/products/reviews/$REVIEW_ID/ - Eliminar reseña" -ForegroundColor Yellow
+Write-Host "`n[50/53] DELETE /api/products/reviews/$REVIEW_ID/ - Eliminar rese�a" -ForegroundColor Yellow
 if ($REVIEW_ID) {
     try {
         Invoke-RestMethod -Uri "$BASE_URL/api/products/reviews/$REVIEW_ID/" -Method Delete -Headers $headers | Out-Null
-        Write-Host "OK - Reseña eliminada" -ForegroundColor Green
+        Write-Host "OK - Rese�a eliminada" -ForegroundColor Green
         $testResults.passed++
     } catch {
         Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
@@ -729,7 +729,7 @@ try {
 Write-Host "`n[53/53] GET /api/orders/admin/dashboard/ - Segunda llamada (debe venir de cache)" -ForegroundColor Yellow
 try {
     $dashboard2 = Invoke-RestMethod -Uri "$BASE_URL/api/orders/admin/dashboard/" -Method Get -Headers $headers
-    $fromCache2 = if ($dashboard2._from_cache) { "CACHE ✓" } else { "DB (cache no funcionó)" }
+    $fromCache2 = if ($dashboard2._from_cache) { "CACHE ?" } else { "DB (cache no funcion�)" }
     Write-Host "OK - Dashboard cargado desde: $fromCache2" -ForegroundColor $(if ($dashboard2._from_cache) { "Green" } else { "Yellow" })
     $testResults.passed++
 } catch {
@@ -752,5 +752,5 @@ Write-Host "Advertencias: $($testResults.warnings)" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Tasa de exito: $successRate%" -ForegroundColor $(if ($successRate -ge 80) { "Green" } else { "Yellow" })
 Write-Host ""
-Write-Host "Total: 53 endpoints testeados en 13 categorias (incluye reseñas, recomendaciones y cache)" -ForegroundColor Cyan
+Write-Host "Total: 53 endpoints testeados en 13 categorias (incluye rese�as, recomendaciones y cache)" -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Blue
