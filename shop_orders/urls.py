@@ -18,6 +18,10 @@ from .views import (
 router = SimpleRouter()
 router.register(r'', OrderViewSet, basename='order')
 
+# Router separado para admin orders (debe ir ANTES de las rutas específicas)
+admin_router = SimpleRouter()
+admin_router.register(r'admin', AdminOrderViewSet, basename='admin-order')
+
 # URLs manuales
 urlpatterns = [
     # Endpoints de usuarios normales
@@ -31,17 +35,17 @@ urlpatterns = [
     # 🎤 NUEVO: Carrito con lenguaje natural (texto/voz)
     path('cart/add-natural-language/', CartNaturalLanguageView.as_view(), name='cart-natural-language'),
     path('cart/suggestions/', ProductSuggestionsView.as_view(), name='product-suggestions'),
-    
-    # Endpoints de administración - Dashboard y Analytics
+]
+
+# IMPORTANTE: Agregar rutas de admin ViewSet PRIMERO (tienen prioridad)
+urlpatterns += admin_router.urls
+
+# Endpoints de administración - Dashboard y Analytics (rutas más específicas al final)
+urlpatterns += [
     path('admin/dashboard/', admin_dashboard, name='admin-dashboard'),
     path('admin/users/', admin_users_list, name='admin-users'),
     path('admin/analytics/sales/', admin_sales_analytics, name='admin-sales-analytics'),
 ]
 
-# Agregar rutas del router ANTES de las rutas admin específicas
+# Agregar rutas del router de órdenes normales al final
 urlpatterns += router.urls
-
-# Router separado para admin orders
-admin_router = SimpleRouter()
-admin_router.register(r'admin', AdminOrderViewSet, basename='admin-order')
-urlpatterns += admin_router.urls
