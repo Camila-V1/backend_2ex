@@ -23,9 +23,6 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-# Importar vistas de reports DIRECTAMENTE
-from reports.views import SalesReportView, ProductsReportView, DynamicReportParserView
-
 # Importaciones para Swagger/OpenAPI
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -40,18 +37,12 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
-    # URLs de reports - vistas simples de Django (no DRF)
-    path('api/reports/sales/', SalesReportView.as_view(), name='sales-report'),
-    path('api/reports/products/', ProductsReportView.as_view(), name='products-report'),
-    # Endpoint inteligente para comandos en lenguaje natural (IA)
-    path('api/reports/dynamic-parser/', DynamicReportParserView.as_view(), name='dynamic-report-parser'),
-    
-    # URLs de las otras apps
+    # URLs de las apps
     path('api/users/', include('users.urls')),
     path('api/products/', include('products.urls')),
     path('api/orders/', include('shop_orders.urls')),
     path('api/', include('predictions.urls')),  # Predicciones con ML
-    path('api/', include('reports.urls')),  # Reportes (incluyendo invoices)
+    path('api/reports/', include('reports.urls')),  # Reportes (sales, products, dynamic-parser, invoices)
     
     # ============================================================================
     # DOCUMENTACIÓN DE LA API (SWAGGER/OpenAPI)

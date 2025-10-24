@@ -1,13 +1,19 @@
 import stripe
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.db.models import Count, Sum, Q, F
+from datetime import datetime, timedelta
+
 from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db import transaction
+from rest_framework.decorators import api_view, permission_classes, action
 
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, OrderCreateSerializer
 from products.models import Product
+from .nlp_service import CartNLPService
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
@@ -195,10 +201,6 @@ class StripeWebhookView(APIView):
 # ADMIN VIEWS - Solo para administradores
 # =============================================================================
 
-from rest_framework.decorators import api_view, permission_classes, action
-from django.db.models import Count, Sum, Q
-from datetime import datetime, timedelta
-
 
 class AdminOrderViewSet(viewsets.ModelViewSet):
     """
@@ -278,7 +280,6 @@ def admin_dashboard(request):
     ).aggregate(total=Sum('total_price'))['total'] or 0
     
     # Productos más vendidos (top 10)
-    from django.db.models import F
     top_products = OrderItem.objects.filter(
         order__status__in=['PAID', 'SHIPPED', 'DELIVERED']
     ).values(
@@ -324,8 +325,6 @@ def admin_dashboard(request):
         'low_stock_products': list(low_stock_products),
     })
 
-
-from django.contrib.auth import get_user_model
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAdminUser])
@@ -387,8 +386,6 @@ def admin_sales_analytics(request):
 # ============================================================================
 # NUEVAS FUNCIONALIDADES: CARRITO CON LENGUAJE NATURAL
 # ============================================================================
-
-from .nlp_service import CartNLPService
 
 
 class CartNaturalLanguageView(APIView):
