@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Count, Sum, Q, F
+from django.utils import timezone
 from datetime import datetime, timedelta
 
 from rest_framework import viewsets, permissions, status
@@ -246,7 +247,7 @@ def admin_dashboard(request):
     GET /api/admin/dashboard/
     """
     # Periodo de tiempo para estadísticas
-    today = datetime.now().date()
+    today = timezone.now().date()
     this_month_start = today.replace(day=1)
     last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
     
@@ -269,14 +270,14 @@ def admin_dashboard(request):
     # Ventas del mes actual
     current_month_revenue = Order.objects.filter(
         status__in=['PAID', 'SHIPPED', 'DELIVERED'],
-        created_at__gte=this_month_start
+        created_at__gte=timezone.make_aware(datetime.combine(this_month_start, datetime.min.time()))
     ).aggregate(total=Sum('total_price'))['total'] or 0
     
     # Ventas del mes anterior
     last_month_revenue = Order.objects.filter(
         status__in=['PAID', 'SHIPPED', 'DELIVERED'],
-        created_at__gte=last_month_start,
-        created_at__lt=this_month_start
+        created_at__gte=timezone.make_aware(datetime.combine(last_month_start, datetime.min.time())),
+        created_at__lt=timezone.make_aware(datetime.combine(this_month_start, datetime.min.time()))
     ).aggregate(total=Sum('total_price'))['total'] or 0
     
     # Productos más vendidos (top 10)
@@ -366,7 +367,7 @@ def admin_sales_analytics(request):
     GET /api/admin/analytics/sales/
     """
     # Ventas por día (últimos 30 días)
-    thirty_days_ago = datetime.now() - timedelta(days=30)
+    thirty_days_ago = timezone.now() - timedelta(days=30)
     
     daily_sales = Order.objects.filter(
         status__in=['PAID', 'SHIPPED', 'DELIVERED'],

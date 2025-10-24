@@ -21,6 +21,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
+    TokenVerifyView,
 )
 
 # Importaciones para Swagger/OpenAPI
@@ -36,6 +37,7 @@ urlpatterns = [
     # URLs para autenticación JWT
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
     # URLs de las apps
     path('api/users/', include('users.urls')),
