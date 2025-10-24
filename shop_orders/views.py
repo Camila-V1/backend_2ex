@@ -11,9 +11,17 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, action
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from .models import Order, OrderItem
-from .serializers import OrderSerializer, OrderCreateSerializer
+from .serializers import (
+    OrderSerializer, OrderCreateSerializer,
+    CheckoutSessionSerializer, StripeWebhookSerializer,
+    NLPCartRequestSerializer, NLPCartResponseSerializer,
+    ProductSuggestionsResponseSerializer,
+    DashboardResponseSerializer, AdminUsersResponseSerializer,
+    SalesAnalyticsResponseSerializer
+)
 from products.models import Product
 from .nlp_service import CartNLPService
 from users.permissions import IsAdminUser, IsManagerUser, IsCajeroUser, IsAdminOrManager
@@ -47,6 +55,7 @@ class CreateOrderView(APIView):
     Permisos: CAJERO, MANAGER o ADMIN pueden crear órdenes.
     """
     permission_classes = [IsCajeroUser]
+    serializer_class = OrderCreateSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = OrderCreateSerializer(data=request.data)
@@ -105,6 +114,7 @@ class CreateCheckoutSessionView(APIView):
     Crea una sesión de pago en Stripe para una orden específica.
     """
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = OrderCreateSerializer
 
     def post(self, request, *args, **kwargs):
         order_id = self.kwargs.get("order_id")
@@ -160,6 +170,7 @@ class StripeWebhookView(APIView):
     actualiza el estado de la orden correspondiente a 'PAGADO'.
     """
     permission_classes = [permissions.AllowAny]  # Los webhooks vienen de Stripe, no de un usuario
+    serializer_class = StripeWebhookSerializer
 
     def post(self, request, *args, **kwargs):
         payload = request.body
@@ -246,6 +257,11 @@ class AdminOrderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+@extend_schema(
+    responses=DashboardResponseSerializer,
+    description="Dashboard con estadísticas administrativas. Incluye overview, ventas, productos top, órdenes recientes y stock bajo.",
+    tags=['Admin']
+)
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def admin_dashboard(request):
@@ -353,6 +369,11 @@ def admin_dashboard(request):
     return Response(dashboard_data)
 
 
+@extend_schema(
+    responses=AdminUsersResponseSerializer,
+    description="Lista de todos los usuarios del sistema (excepto administradores) con sus estadísticas de compras",
+    tags=['Admin']
+)
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def admin_users_list(request):
@@ -385,6 +406,11 @@ def admin_users_list(request):
     })
 
 
+@extend_schema(
+    responses=SalesAnalyticsResponseSerializer,
+    description="Análisis detallado de ventas diarias (últimos 30 días)",
+    tags=['Admin']
+)
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def admin_sales_analytics(request):
@@ -427,6 +453,7 @@ class CartNaturalLanguageView(APIView):
     - "Comprar 5 auriculares bluetooth"
     """
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = NLPCartRequestSerializer
     
     def post(self, request):
         prompt = request.data.get('prompt', '').strip()
@@ -547,6 +574,7 @@ class ProductSuggestionsView(APIView):
     GET /api/cart/suggestions/?q=smart
     """
     permission_classes = [permissions.AllowAny]  # Público para mejor UX
+    serializer_class = ProductSuggestionsResponseSerializer
     
     def get(self, request):
         query = request.GET.get('q', '').strip()

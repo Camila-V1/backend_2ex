@@ -6,6 +6,7 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
+from .serializers import SalesPredictionResponseSerializer
 
 
 class SalesPredictionView(APIView):
@@ -16,6 +17,7 @@ class SalesPredictionView(APIView):
     python manage.py train_sales_model
     """
     permission_classes = [permissions.IsAdminUser]
+    serializer_class = SalesPredictionResponseSerializer
 
     def get(self, request, *args, **kwargs):
         model_path = os.path.join(settings.BASE_DIR, 'predictions', 'sales_model.joblib')

@@ -16,6 +16,11 @@ from .services import (
     generate_dynamic_report_excel,
     build_dynamic_sales_query
 )
+from .serializers import (
+    DynamicReportRequestSerializer,
+    DynamicReportResponseSerializer,
+    InvoiceResponseSerializer
+)
 from shop_orders.models import Order
 from users.permissions import CanViewReports
 import logging
@@ -129,6 +134,7 @@ class DynamicReportParserView(APIView):
     - "Dame un reporte de compras por cliente con sus nombres"
     """
     permission_classes = [permissions.IsAdminUser]
+    serializer_class = DynamicReportRequestSerializer
 
     def parse_prompt(self, prompt):
         """
@@ -338,6 +344,7 @@ class OrderInvoiceView(APIView):
     - El usuario debe ser el dueño de la orden O ser administrador
     """
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InvoiceResponseSerializer
 
     def get(self, request, order_id, *args, **kwargs):
         logger.info(f"🧾 OrderInvoiceView - Generando invoice para orden #{order_id}")

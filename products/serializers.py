@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from .models import Category, Product, Review
 
 
@@ -42,11 +43,13 @@ class ProductSerializer(serializers.ModelSerializer):
             'is_active', 'average_rating', 'review_count'
         ]
     
-    def get_average_rating(self, obj):
+    @extend_schema_field(serializers.FloatField)
+    def get_average_rating(self, obj) -> float:
         """Calcula el promedio de calificaciones."""
         return obj.average_rating
     
-    def get_review_count(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_review_count(self, obj) -> int:
         """Retorna el número de reseñas."""
         return obj.review_count
 

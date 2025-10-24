@@ -3,6 +3,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
 from .models import CustomUser
 from .serializers import UserRegistrationSerializer, UserProfileSerializer
 from .permissions import IsAdminOrSelf
@@ -39,6 +40,11 @@ class UserViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
 
+@extend_schema(
+    responses=UserProfileSerializer,
+    description="Obtiene el perfil del usuario autenticado actualmente",
+    tags=['Users']
+)
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def user_profile(request):
