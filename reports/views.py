@@ -11,7 +11,10 @@ from .services import (
     generate_sales_report_excel, 
     generate_products_report_pdf, 
     generate_products_report_excel,
-    generate_invoice_pdf
+    generate_invoice_pdf,
+    generate_dynamic_report_pdf,
+    generate_dynamic_report_excel,
+    build_dynamic_sales_query
 )
 from shop_orders.models import Order
 import logging
@@ -120,11 +123,132 @@ class DynamicReportParserView(APIView):
     - "Dame el reporte de ventas de septiembre en excel"
     - "Genera un reporte de productos en PDF"
     - "Reporte de ventas del 01/10/2025 al 31/10/2025 en excel"
+    - "Reporte de ventas agrupado por producto del mes de octubre"
+    - "Muestra las ventas con nombres de clientes del mes pasado"
+    - "Dame un reporte de compras por cliente con sus nombres"
     """
     permission_classes = [permissions.IsAdminUser]
 
+    def parse_prompt(self, prompt):
+        """
+        Parsea el prompt en lenguaje natural para extraer todas las instrucciones.
+        
+        Returns:
+            dict con: report_type, format, start_date, end_date, group_by, 
+                     show_customer_names, show_product_names, count_orders, sum_totals
+        """
+        prompt_lower = prompt.lower()
+        parsed = {
+            'report_type': 'ventas',
+            'format': 'pdf',
+            'group_by': None,
+            'show_customer_names': False,
+            'show_product_names': False,
+            'count_orders': False,
+            'sum_totals': False,
+            'start_date': None,
+            'end_date': None
+        }
+        
+        # 1. Tipo de reporte
+        if any(word in prompt_lower for word in ['producto', 'inventario', 'stock']):
+            parsed['report_type'] = 'productos'
+            logger.info(f"📦 Tipo de reporte: PRODUCTOS")
+        else:
+            logger.info(f"💰 Tipo de reporte: VENTAS")
+        
+        # 2. Formato
+        if any(word in prompt_lower for word in ['excel', 'xlsx', 'hoja de cálculo', 'hoja de calculo']):
+            parsed['format'] = 'excel'
+        logger.info(f"📄 Formato: {parsed['format'].upper()}")
+        
+        # 3. Agrupación
+        if any(phrase in prompt_lower for phrase in ['agrupado por producto', 'agrupar por producto', 'por producto']):
+            parsed['group_by'] = 'product'
+            logger.info(f"� Agrupación: Por PRODUCTO")
+        elif any(phrase in prompt_lower for phrase in ['agrupado por cliente', 'agrupar por cliente', 'por cliente', 'compras por cliente']):
+            parsed['group_by'] = 'customer'
+            logger.info(f"📊 Agrupación: Por CLIENTE")
+        
+        # 4. Mostrar nombres de clientes
+        if any(phrase in prompt_lower for phrase in ['nombre del cliente', 'nombres de clientes', 'con nombres', 'mostrar cliente']):
+            parsed['show_customer_names'] = True
+            logger.info(f"👤 Mostrar nombres de clientes: SÍ")
+        
+        # 5. Mostrar nombres de productos
+        if any(phrase in prompt_lower for phrase in ['nombre del producto', 'nombres de productos', 'mostrar producto', 'detalle de producto']):
+            parsed['show_product_names'] = True
+            logger.info(f"📦 Mostrar nombres de productos: SÍ")
+        
+        # 6. Contar órdenes
+        if any(phrase in prompt_lower for phrase in ['cantidad de compras', 'cuantas compras', 'número de órdenes', 'numero de ordenes', 'contar']):
+            parsed['count_orders'] = True
+            logger.info(f"🔢 Contar órdenes: SÍ")
+        
+        # 7. Sumar totales
+        if any(phrase in prompt_lower for phrase in ['total', 'suma', 'monto']):
+            parsed['sum_totals'] = True
+            logger.info(f"💵 Sumar totales: SÍ")
+        
+        # 8. Extraer fechas
+        current_year = datetime.now().year
+        
+        # 8.1 Fechas específicas
+        date_range_pattern = r'del?\s+(\d{1,2}[/-]\d{1,2}[/-]\d{4}|\d{4}-\d{2}-\d{2})\s+al?\s+(\d{1,2}[/-]\d{1,2}[/-]\d{4}|\d{4}-\d{2}-\d{2})'
+        match = re.search(date_range_pattern, prompt_lower)
+        
+        if match:
+            start_str, end_str = match.groups()
+            logger.info(f"📅 Rango de fechas detectado: {start_str} al {end_str}")
+            
+            for date_format in ['%d/%m/%Y', '%d-%m-%Y', '%Y-%m-%d']:
+                try:
+                    parsed['start_date'] = datetime.strptime(start_str, date_format).date()
+                    parsed['end_date'] = datetime.strptime(end_str, date_format).date()
+                    logger.info(f"✅ Fechas parseadas: {parsed['start_date']} a {parsed['end_date']}")
+                    break
+                except ValueError:
+                    continue
+        
+        # 8.2 Nombres de meses
+        if not parsed['start_date']:
+            meses = {
+                "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
+                "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
+                "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
+            }
+            
+            for nombre_mes, num_mes in meses.items():
+                if nombre_mes in prompt_lower:
+                    logger.info(f"📅 Mes detectado: {nombre_mes.upper()} ({num_mes})")
+                    
+                    year_match = re.search(r'\b(20\d{2})\b', prompt_lower)
+                    if year_match:
+                        current_year = int(year_match.group(1))
+                    
+                    primer_dia = datetime(current_year, num_mes, 1).date()
+                    ultimo_dia_num = calendar.monthrange(current_year, num_mes)[1]
+                    ultimo_dia = datetime(current_year, num_mes, ultimo_dia_num).date()
+                    
+                    parsed['start_date'] = primer_dia
+                    parsed['end_date'] = ultimo_dia
+                    logger.info(f"✅ Rango calculado: {parsed['start_date']} a {parsed['end_date']}")
+                    break
+        
+        # 8.3 Mes actual por defecto
+        if not parsed['start_date']:
+            logger.info(f"⚠️ No se detectó fecha, usando mes actual")
+            today = datetime.now()
+            primer_dia = datetime(today.year, today.month, 1).date()
+            ultimo_dia_num = calendar.monthrange(today.year, today.month)[1]
+            ultimo_dia = datetime(today.year, today.month, ultimo_dia_num).date()
+            parsed['start_date'] = primer_dia
+            parsed['end_date'] = ultimo_dia
+        
+        return parsed
+
     def post(self, request, *args, **kwargs):
-        prompt = request.data.get('prompt', '').lower()
+        prompt = request.data.get('prompt', '')
         
         logger.info(f"🤖 DynamicReportParserView - Prompt recibido: {prompt}")
 
@@ -134,124 +258,71 @@ class DynamicReportParserView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 1. Determinar el TIPO de reporte (ventas o productos)
-        report_type = 'ventas'  # Por defecto
-        if 'producto' in prompt or 'inventario' in prompt or 'stock' in prompt:
-            report_type = 'productos'
-            logger.info(f"📦 Tipo de reporte detectado: PRODUCTOS")
-        else:
-            logger.info(f"💰 Tipo de reporte detectado: VENTAS")
-
-        # 2. Extraer el FORMATO (pdf o excel)
-        report_format = 'pdf'  # Por defecto
-        if 'excel' in prompt or 'xlsx' in prompt or 'hoja de cálculo' in prompt:
-            report_format = 'excel'
-        logger.info(f"📄 Formato detectado: {report_format.upper()}")
-
-        # 3. Para reportes de PRODUCTOS (no requieren fechas)
-        if report_type == 'productos':
+        # Parsear el prompt completo
+        parsed = self.parse_prompt(prompt)
+        
+        # Para reportes de PRODUCTOS (no requieren fechas ni agrupación)
+        if parsed['report_type'] == 'productos':
             logger.info(f"🔧 Generando reporte de productos...")
             try:
-                if report_format == 'pdf':
+                if parsed['format'] == 'pdf':
                     buffer = generate_products_report_pdf()
                     response = HttpResponse(buffer, content_type='application/pdf')
                     response['Content-Disposition'] = 'attachment; filename="reporte_productos.pdf"'
-                    logger.info(f"✅ Reporte de productos PDF generado")
-                    return response
                 else:
                     buffer = generate_products_report_excel()
                     response = HttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                     response['Content-Disposition'] = 'attachment; filename="reporte_productos.xlsx"'
-                    logger.info(f"✅ Reporte de productos Excel generado")
-                    return response
+                logger.info(f"✅ Reporte de productos generado")
+                return response
             except Exception as e:
-                logger.error(f"❌ Error al generar reporte de productos: {str(e)}")
+                logger.error(f"❌ Error: {str(e)}")
                 return Response(
                     {"error": f"Error al generar el reporte: {str(e)}"},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-        # 4. Para reportes de VENTAS (requieren fechas)
-        start_date, end_date = None, None
-        current_year = datetime.now().year
-
-        # 4.1. Intentar extraer fechas específicas con regex (DD/MM/YYYY o YYYY-MM-DD)
-        # Patrón: "del 01/10/2025 al 31/10/2025" o "del 2025-10-01 al 2025-10-31"
-        date_range_pattern = r'del?\s+(\d{1,2}[/-]\d{1,2}[/-]\d{4}|\d{4}-\d{2}-\d{2})\s+al?\s+(\d{1,2}[/-]\d{1,2}[/-]\d{4}|\d{4}-\d{2}-\d{2})'
-        match = re.search(date_range_pattern, prompt)
-        
-        if match:
-            start_str, end_str = match.groups()
-            logger.info(f"📅 Rango de fechas detectado: {start_str} al {end_str}")
-            
-            try:
-                # Intentar varios formatos de fecha
-                for date_format in ['%d/%m/%Y', '%d-%m-%Y', '%Y-%m-%d']:
-                    try:
-                        start_date = datetime.strptime(start_str, date_format).date()
-                        end_date = datetime.strptime(end_str, date_format).date()
-                        logger.info(f"✅ Fechas parseadas: {start_date} a {end_date}")
-                        break
-                    except ValueError:
-                        continue
-            except Exception as e:
-                logger.error(f"❌ Error al parsear fechas específicas: {e}")
-
-        # 4.2. Si no se encontraron fechas específicas, buscar nombre de mes
-        if not start_date:
-            meses = {
-                "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
-                "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
-                "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
-            }
-            
-            for nombre_mes, num_mes in meses.items():
-                if nombre_mes in prompt:
-                    logger.info(f"📅 Mes detectado: {nombre_mes.upper()} ({num_mes})")
-                    
-                    # Extraer año si está especificado
-                    year_match = re.search(r'\b(20\d{2})\b', prompt)
-                    if year_match:
-                        current_year = int(year_match.group(1))
-                        logger.info(f"📅 Año especificado: {current_year}")
-                    
-                    # Calcular primer y último día del mes
-                    primer_dia = datetime(current_year, num_mes, 1).date()
-                    ultimo_dia_num = calendar.monthrange(current_year, num_mes)[1]
-                    ultimo_dia = datetime(current_year, num_mes, ultimo_dia_num).date()
-                    
-                    start_date, end_date = primer_dia, ultimo_dia
-                    logger.info(f"✅ Rango calculado: {start_date} a {end_date}")
-                    break
-
-        # 4.3. Si aún no hay fechas, usar el mes actual
-        if not start_date:
-            logger.info(f"⚠️ No se detectó fecha específica, usando mes actual")
-            today = datetime.now()
-            primer_dia = datetime(today.year, today.month, 1).date()
-            ultimo_dia_num = calendar.monthrange(today.year, today.month)[1]
-            ultimo_dia = datetime(today.year, today.month, ultimo_dia_num).date()
-            start_date, end_date = primer_dia, ultimo_dia
-            logger.info(f"✅ Usando mes actual: {start_date} a {end_date}")
-
-        # 5. Generar el reporte de ventas
-        logger.info(f"🔧 Generando reporte de ventas desde {start_date} hasta {end_date} en {report_format}")
-        
+        # Para reportes de VENTAS con consulta dinámica
         try:
-            if report_format == 'pdf':
-                buffer = generate_sales_report_pdf(start_date, end_date)
-                response = HttpResponse(buffer, content_type='application/pdf')
-                response['Content-Disposition'] = f'attachment; filename="reporte_ventas_{start_date}_a_{end_date}.pdf"'
-                logger.info(f"✅ Reporte de ventas PDF generado exitosamente")
-                return response
+            logger.info(f"🔧 Construyendo consulta dinámica SQL...")
+            
+            # Construir la consulta SQL dinámica
+            queryset, headers, formatter = build_dynamic_sales_query(parsed)
+            
+            # Procesar los datos
+            data = []
+            for item in queryset:
+                data.append(formatter(item))
+            
+            logger.info(f"✅ Consulta ejecutada: {len(data)} registros obtenidos")
+            
+            # Determinar título del reporte
+            if parsed['group_by'] == 'product':
+                title = f"Ventas por Producto ({parsed['start_date']} a {parsed['end_date']})"
+            elif parsed['group_by'] == 'customer':
+                title = f"Ventas por Cliente ({parsed['start_date']} a {parsed['end_date']})"
             else:
-                buffer = generate_sales_report_excel(start_date, end_date)
+                title = f"Reporte de Ventas ({parsed['start_date']} a {parsed['end_date']})"
+            
+            # Generar el reporte en el formato solicitado
+            if parsed['format'] == 'pdf':
+                buffer = generate_dynamic_report_pdf(data, headers, title)
+                response = HttpResponse(buffer, content_type='application/pdf')
+                filename = f"reporte_ventas_{parsed['start_date']}_a_{parsed['end_date']}.pdf"
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            else:
+                buffer = generate_dynamic_report_excel(data, headers, title)
                 response = HttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                response['Content-Disposition'] = f'attachment; filename="reporte_ventas_{start_date}_a_{end_date}.xlsx"'
-                logger.info(f"✅ Reporte de ventas Excel generado exitosamente")
-                return response
+                filename = f"reporte_ventas_{parsed['start_date']}_a_{parsed['end_date']}.xlsx"
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            
+            logger.info(f"✅ Reporte dinámico generado exitosamente")
+            return response
+            
         except Exception as e:
-            logger.error(f"❌ Error al generar reporte de ventas: {str(e)}")
+            logger.error(f"❌ Error al generar reporte dinámico: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
             return Response(
                 {"error": f"Error al generar el reporte: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

@@ -515,6 +515,45 @@ try {
     $testResults.failed++
 }
 
+Write-Host "`n[40b/45] POST /api/reports/dynamic-parser/ - Agrupado por producto" -ForegroundColor Yellow
+try {
+    $dynamicBody2 = @{
+        prompt = "Reporte de ventas agrupado por producto del mes de octubre en Excel"
+    } | ConvertTo-Json
+    Invoke-RestMethod -Uri "$BASE_URL/api/reports/dynamic-parser/" -Method Post -Body $dynamicBody2 -Headers $headers -OutFile "$env:TEMP\ventas_por_producto.xlsx"
+    Write-Host "OK - Reporte agrupado por producto: $env:TEMP\ventas_por_producto.xlsx" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+Write-Host "`n[40c/45] POST /api/reports/dynamic-parser/ - Agrupado por cliente" -ForegroundColor Yellow
+try {
+    $dynamicBody3 = @{
+        prompt = "Dame un reporte de compras por cliente con sus nombres del mes de octubre"
+    } | ConvertTo-Json
+    Invoke-RestMethod -Uri "$BASE_URL/api/reports/dynamic-parser/" -Method Post -Body $dynamicBody3 -Headers $headers -OutFile "$env:TEMP\ventas_por_cliente.pdf"
+    Write-Host "OK - Reporte agrupado por cliente: $env:TEMP\ventas_por_cliente.pdf" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+Write-Host "`n[40d/45] POST /api/reports/dynamic-parser/ - Con nombres de clientes" -ForegroundColor Yellow
+try {
+    $dynamicBody4 = @{
+        prompt = "Muestra las ventas con nombres de clientes y productos del mes de octubre en PDF"
+    } | ConvertTo-Json
+    Invoke-RestMethod -Uri "$BASE_URL/api/reports/dynamic-parser/" -Method Post -Body $dynamicBody4 -Headers $headers -OutFile "$env:TEMP\ventas_detallado.pdf"
+    Write-Host "OK - Reporte detallado con nombres: $env:TEMP\ventas_detallado.pdf" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
 Write-Host "`n[41/45] GET /api/orders/$ORDER_ID/invoice/" -ForegroundColor Yellow
 if ($ORDER_ID) {
     try {
@@ -607,5 +646,5 @@ Write-Host "Advertencias: $($testResults.warnings)" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Tasa de exito: $successRate%" -ForegroundColor $(if ($successRate -ge 80) { "Green" } else { "Yellow" })
 Write-Host ""
-Write-Host "Total: 45 endpoints testeados en 10 categorias" -ForegroundColor Cyan
+Write-Host "Total: 48 endpoints testeados en 10 categorias (incluye 3 tests adicionales de parser dinamico)" -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Blue
