@@ -1,0 +1,32 @@
+# backend_2ex/.gitignore
+
+# Entorno virtual
+venv/
+
+# Archivo de variables de entorno
+.env
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Base de datos local (si usaras SQLite)
+db.sqlite3
+
+# Archivos del IDE
+.vscode/
+.idea/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de log
+*.log
+
+# Migraciones locales (opcinal - dependiendo del flujo de trabajo)
+# */migrations/*
+# !*/migrations/__init__.py
+
+# Archivos de modelos de ML
+*.joblib
