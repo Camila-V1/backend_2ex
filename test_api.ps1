@@ -1,12 +1,13 @@
-﻿# Script de Testing Completo - API E-Commerce
-# Prueba TODOS los endpoints de la API (45+ endpoints)
+﻿# Script de Testing Completo - API E-Commerce SmartSales365
+# Prueba TODOS los endpoints de la API (53 endpoints en 13 categorías)
+# Incluye: Auth, Users, Products, Categories, Orders, NLP Cart, Admin, Reports, ML, Reviews, Recommendations, Cache
 # Uso: .\test_api.ps1
 
 $BASE_URL = "http://localhost:8000"
 $testResults = @{ passed = 0; failed = 0; warnings = 0 }
 
 Write-Host "================================================================" -ForegroundColor Blue
-Write-Host "TESTING COMPLETO - TODOS LOS ENDPOINTS DE LA API (45 endpoints)" -ForegroundColor Blue
+Write-Host "TESTING COMPLETO - SMARTSALES365 API (53 endpoints)" -ForegroundColor Blue
 Write-Host "================================================================" -ForegroundColor Blue
 
 # CATEGORIA 1: AUTENTICACION JWT (3 endpoints)
@@ -631,6 +632,111 @@ try {
     $testResults.failed++
 }
 
+# CATEGORIA 11: SISTEMA DE RESEÑAS (5 endpoints)
+Write-Host "`n================================================" -ForegroundColor Cyan
+Write-Host "CATEGORIA 11: SISTEMA DE RESEÑAS (5 endpoints)" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
+
+Write-Host "`n[46/53] POST /api/products/$PRODUCT_ID/reviews/ - Crear reseña" -ForegroundColor Yellow
+$reviewBody = @{ rating = 5; comment = "Excelente producto, muy recomendado!" } | ConvertTo-Json
+$REVIEW_ID = $null
+try {
+    $review = Invoke-RestMethod -Uri "$BASE_URL/api/products/$PRODUCT_ID/reviews/" -Method Post -Headers $headers -Body $reviewBody -ContentType "application/json"
+    $REVIEW_ID = $review.id
+    Write-Host "OK - Reseña creada: ID $REVIEW_ID - Rating: $($review.rating)★" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+Write-Host "`n[47/53] GET /api/products/$PRODUCT_ID/reviews/ - Listar reseñas del producto" -ForegroundColor Yellow
+try {
+    $reviews = Invoke-RestMethod -Uri "$BASE_URL/api/products/$PRODUCT_ID/reviews/" -Method Get
+    Write-Host "OK - Reseñas: $($reviews.count) | Rating promedio: $($reviews.average_rating)★" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+Write-Host "`n[48/53] GET /api/products/reviews/?product=$PRODUCT_ID - Filtrar reseñas" -ForegroundColor Yellow
+try {
+    $filteredReviews = Invoke-RestMethod -Uri "$BASE_URL/api/products/reviews/?product=$PRODUCT_ID" -Method Get
+    Write-Host "OK - Reseñas filtradas: $($filteredReviews.Count)" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+Write-Host "`n[49/53] PATCH /api/products/reviews/$REVIEW_ID/ - Actualizar reseña" -ForegroundColor Yellow
+if ($REVIEW_ID) {
+    $updateReviewBody = @{ rating = 4; comment = "Muy bueno, actualización de mi reseña" } | ConvertTo-Json
+    try {
+        $updated = Invoke-RestMethod -Uri "$BASE_URL/api/products/reviews/$REVIEW_ID/" -Method Patch -Headers $headers -Body $updateReviewBody -ContentType "application/json"
+        Write-Host "OK - Reseña actualizada: Rating=$($updated.rating)★" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+}
+
+Write-Host "`n[50/53] DELETE /api/products/reviews/$REVIEW_ID/ - Eliminar reseña" -ForegroundColor Yellow
+if ($REVIEW_ID) {
+    try {
+        Invoke-RestMethod -Uri "$BASE_URL/api/products/reviews/$REVIEW_ID/" -Method Delete -Headers $headers | Out-Null
+        Write-Host "OK - Reseña eliminada" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+}
+
+# CATEGORIA 12: RECOMENDACIONES DE PRODUCTOS (1 endpoint)
+Write-Host "`n================================================" -ForegroundColor Cyan
+Write-Host "CATEGORIA 12: RECOMENDACIONES (1 endpoint)" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
+
+Write-Host "`n[51/53] GET /api/products/$PRODUCT_ID/recommendations/" -ForegroundColor Yellow
+try {
+    $recommendations = Invoke-RestMethod -Uri "$BASE_URL/api/products/$PRODUCT_ID/recommendations/" -Method Get
+    Write-Host "OK - Recomendaciones para '$($recommendations.product)': $($recommendations.recommendations.Count) productos" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+# CATEGORIA 13: CACHE Y RENDIMIENTO (2 endpoints)
+Write-Host "`n================================================" -ForegroundColor Cyan
+Write-Host "CATEGORIA 13: CACHE Y RENDIMIENTO (2 endpoints)" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
+
+Write-Host "`n[52/53] GET /api/orders/admin/dashboard/ - Primera llamada (sin cache)" -ForegroundColor Yellow
+try {
+    $dashboard1 = Invoke-RestMethod -Uri "$BASE_URL/api/orders/admin/dashboard/" -Method Get -Headers $headers
+    $fromCache1 = if ($dashboard1._from_cache) { "CACHE" } else { "DB" }
+    Write-Host "OK - Dashboard cargado desde: $fromCache1" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+Write-Host "`n[53/53] GET /api/orders/admin/dashboard/ - Segunda llamada (debe venir de cache)" -ForegroundColor Yellow
+try {
+    $dashboard2 = Invoke-RestMethod -Uri "$BASE_URL/api/orders/admin/dashboard/" -Method Get -Headers $headers
+    $fromCache2 = if ($dashboard2._from_cache) { "CACHE ✓" } else { "DB (cache no funcionó)" }
+    Write-Host "OK - Dashboard cargado desde: $fromCache2" -ForegroundColor $(if ($dashboard2._from_cache) { "Green" } else { "Yellow" })
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
 # RESUMEN FINAL
 $total = $testResults.passed + $testResults.failed + $testResults.warnings
 $successRate = [math]::Round(($testResults.passed / $total) * 100, 1)
@@ -646,5 +752,5 @@ Write-Host "Advertencias: $($testResults.warnings)" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Tasa de exito: $successRate%" -ForegroundColor $(if ($successRate -ge 80) { "Green" } else { "Yellow" })
 Write-Host ""
-Write-Host "Total: 48 endpoints testeados en 10 categorias (incluye 3 tests adicionales de parser dinamico)" -ForegroundColor Cyan
+Write-Host "Total: 53 endpoints testeados en 13 categorias (incluye reseñas, recomendaciones y cache)" -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Blue

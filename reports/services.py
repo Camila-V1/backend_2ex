@@ -1,6 +1,7 @@
 from io import BytesIO
 from datetime import datetime, timedelta
 from django.http import HttpResponse
+from django.utils import timezone
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
@@ -21,12 +22,13 @@ def generate_sales_report_pdf(start_date, end_date):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
     
-    # Convertir end_date al día siguiente para incluir todo el día
-    end_date_inclusive = end_date + timedelta(days=1)
+    # Convertir fechas a datetime timezone-aware
+    start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+    end_datetime = timezone.make_aware(datetime.combine(end_date + timedelta(days=1), datetime.min.time()))
     
     orders = Order.objects.filter(
-        created_at__gte=start_date,
-        created_at__lt=end_date_inclusive,
+        created_at__gte=start_datetime,
+        created_at__lt=end_datetime,
         status=Order.OrderStatus.PAID
     )
 
@@ -72,12 +74,13 @@ def generate_sales_report_excel(start_date, end_date):
     headers = ['ID Orden', 'Usuario', 'Email', 'Fecha', 'Estado', 'Total']
     sheet.append(headers)
     
-    # Convertir end_date al día siguiente para incluir todo el día
-    end_date_inclusive = end_date + timedelta(days=1)
+    # Convertir fechas a datetime timezone-aware
+    start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+    end_datetime = timezone.make_aware(datetime.combine(end_date + timedelta(days=1), datetime.min.time()))
     
     orders = Order.objects.filter(
-        created_at__gte=start_date,
-        created_at__lt=end_date_inclusive,
+        created_at__gte=start_datetime,
+        created_at__lt=end_datetime,
         status=Order.OrderStatus.PAID
     )
 
@@ -334,8 +337,9 @@ def build_dynamic_sales_query(parsed_instructions):
     count_orders = parsed_instructions.get('count_orders', False)
     sum_totals = parsed_instructions.get('sum_totals', False)
     
-    # Convertir end_date al día siguiente para incluir todo el día
-    end_date_inclusive = end_date + timedelta(days=1)
+    # Convertir fechas a datetime timezone-aware
+    start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+    end_datetime = timezone.make_aware(datetime.combine(end_date + timedelta(days=1), datetime.min.time()))
     
     # Caso 1: Agrupado por PRODUCTO
     if group_by == 'product':
@@ -343,8 +347,8 @@ def build_dynamic_sales_query(parsed_instructions):
         queryset = (
             OrderItem.objects
             .filter(
-                order__created_at__gte=start_date,
-                order__created_at__lt=end_date_inclusive,
+                order__created_at__gte=start_datetime,
+                order__created_at__lt=end_datetime,
                 order__status=Order.OrderStatus.PAID
             )
             .values('product__id', 'product__name')
@@ -374,8 +378,8 @@ def build_dynamic_sales_query(parsed_instructions):
         queryset = (
             Order.objects
             .filter(
-                created_at__gte=start_date,
-                created_at__lt=end_date_inclusive,
+                created_at__gte=start_datetime,
+                created_at__lt=end_datetime,
                 status=Order.OrderStatus.PAID
             )
             .values('user__id', 'user__username', 'user__email', 'user__first_name', 'user__last_name')
@@ -409,8 +413,8 @@ def build_dynamic_sales_query(parsed_instructions):
         queryset = (
             Order.objects
             .filter(
-                created_at__gte=start_date,
-                created_at__lt=end_date_inclusive,
+                created_at__gte=start_datetime,
+                created_at__lt=end_datetime,
                 status=Order.OrderStatus.PAID
             )
             .select_related('user')

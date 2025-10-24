@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Count, Sum, Q, F
 from django.utils import timezone
+from django.core.cache import cache
 from datetime import datetime, timedelta
 
 from rest_framework import viewsets, permissions, status
@@ -15,6 +16,7 @@ from .models import Order, OrderItem
 from .serializers import OrderSerializer, OrderCreateSerializer
 from products.models import Product
 from .nlp_service import CartNLPService
+from users.permissions import IsAdminUser, IsManagerUser, IsCajeroUser, IsAdminOrManager
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
@@ -42,8 +44,9 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
 class CreateOrderView(APIView):
     """
     Vista para crear una nueva orden a partir del carrito de compras.
+    Permisos: CAJERO, MANAGER o ADMIN pueden crear órdenes.
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsCajeroUser]
 
     def post(self, request, *args, **kwargs):
         serializer = OrderCreateSerializer(data=request.data)
@@ -212,7 +215,11 @@ class AdminOrderViewSet(viewsets.ModelViewSet):
     - DELETE /api/admin/orders/{id}/ - Eliminar orden
     """
     serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminUser]
+    # Forzar que el lookup de detail use solo IDs numéricos para evitar colisiones
+    # con rutas estáticas como 'dashboard' o 'users' que de otro modo podrían
+    # coincidir con el patrón <pk> y producir 404.
+    lookup_value_regex = r"\d+"
     queryset = Order.objects.all().order_by('-created_at')
     
     @action(detail=True, methods=['post'])
@@ -240,12 +247,25 @@ class AdminOrderViewSet(viewsets.ModelViewSet):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAdminUser])
 def admin_dashboard(request):
     """
-    Dashboard con estadísticas para el administrador
+    Dashboard con estadísticas para el administrador.
     GET /api/admin/dashboard/
+    
+    Implementa caching con Redis para mejorar el rendimiento.
+    Cache TTL: 5 minutos
     """
+    cache_key = 'admin_dashboard_data'
+    
+    # Intentar obtener del cache
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        # Agregar header para indicar que viene del cache
+        cached_data['_from_cache'] = True
+        return Response(cached_data)
+    
+    # Si no está en cache, calcular
     # Periodo de tiempo para estadísticas
     today = timezone.now().date()
     this_month_start = today.replace(day=1)
@@ -307,7 +327,7 @@ def admin_dashboard(request):
     if last_month_revenue > 0:
         growth_percentage = ((current_month_revenue - last_month_revenue) / last_month_revenue) * 100
     
-    return Response({
+    dashboard_data = {
         'overview': {
             'total_orders': total_orders,
             'total_users': total_users,
@@ -324,11 +344,17 @@ def admin_dashboard(request):
         'top_products': list(top_products),
         'recent_orders': recent_orders_data,
         'low_stock_products': list(low_stock_products),
-    })
+        '_from_cache': False
+    }
+    
+    # Guardar en cache por 5 minutos
+    cache.set(cache_key, dashboard_data, timeout=300)
+    
+    return Response(dashboard_data)
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAdminUser])
 def admin_users_list(request):
     """
     Lista de todos los usuarios (excepto admins)
@@ -360,7 +386,7 @@ def admin_users_list(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAdminUser])
 def admin_sales_analytics(request):
     """
     Análisis detallado de ventas por día, semana, mes

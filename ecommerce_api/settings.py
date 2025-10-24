@@ -101,6 +101,24 @@ DATABASES = {
 }
 
 
+# Redis Cache Configuration
+# https://docs.djangoproject.com/en/5.2/topics/cache/
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'KEY_PREFIX': 'smartsales',
+        'TIMEOUT': 300,  # 5 minutos por defecto
+    }
+}
+
+# Cache time to live (en segundos)
+CACHE_TTL = 60 * 5  # 5 minutos
+
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 

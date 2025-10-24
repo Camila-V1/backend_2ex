@@ -18,3 +18,65 @@ class IsAdminOrSelf(permissions.BasePermission):
         
         # El propio usuario tiene permiso para ver o editar su perfil.
         return obj == request.user
+
+
+class IsAdminUser(permissions.BasePermission):
+    """
+    Permiso para usuarios con rol ADMIN.
+    """
+    def has_permission(self, request, view):
+        return (
+            request.user 
+            and request.user.is_authenticated 
+            and request.user.role == 'ADMIN'
+        )
+
+
+class IsManagerUser(permissions.BasePermission):
+    """
+    Permiso para usuarios con rol MANAGER.
+    Managers pueden ver reportes y gestionar productos/categorías.
+    """
+    def has_permission(self, request, view):
+        return (
+            request.user 
+            and request.user.is_authenticated 
+            and request.user.role in ['MANAGER', 'ADMIN']
+        )
+
+
+class IsCajeroUser(permissions.BasePermission):
+    """
+    Permiso para usuarios con rol CAJERO.
+    Cajeros pueden crear órdenes y ver productos.
+    """
+    def has_permission(self, request, view):
+        return (
+            request.user 
+            and request.user.is_authenticated 
+            and request.user.role in ['CAJERO', 'MANAGER', 'ADMIN']
+        )
+
+
+class IsAdminOrManager(permissions.BasePermission):
+    """
+    Permiso para ADMIN o MANAGER.
+    """
+    def has_permission(self, request, view):
+        return (
+            request.user 
+            and request.user.is_authenticated 
+            and request.user.role in ['ADMIN', 'MANAGER']
+        )
+
+
+class CanViewReports(permissions.BasePermission):
+    """
+    Permiso para ver reportes (ADMIN, MANAGER).
+    """
+    def has_permission(self, request, view):
+        return (
+            request.user 
+            and request.user.is_authenticated 
+            and request.user.role in ['ADMIN', 'MANAGER']
+        )

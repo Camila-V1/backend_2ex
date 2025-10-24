@@ -1,4 +1,6 @@
 from django.db import models
+from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Category(models.Model):
@@ -31,3 +33,51 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+    
+    @property
+    def average_rating(self):
+        """Calcula el promedio de calificaciones del producto."""
+        reviews = self.reviews.all()
+        if not reviews:
+            return 0
+        return round(sum(r.rating for r in reviews) / len(reviews), 1)
+    
+    @property
+    def review_count(self):
+        """Retorna el número total de reseñas."""
+        return self.reviews.count()
+
+
+class Review(models.Model):
+    """
+    Modelo de Reseñas para productos.
+    Un usuario solo puede dejar una reseña por producto.
+    """
+    product = models.ForeignKey(
+        Product, 
+        on_delete=models.CASCADE, 
+        related_name='reviews',
+        verbose_name='Producto'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE,
+        verbose_name='Usuario'
+    )
+    rating = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        verbose_name='Calificación (1-5)'
+    )
+    comment = models.TextField(blank=True, verbose_name='Comentario')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Última actualización')
+
+    class Meta:
+        verbose_name = 'Reseña'
+        verbose_name_plural = 'Reseñas'
+        ordering = ['-created_at']
+        unique_together = ('product', 'user')  # Un usuario = una reseña por producto
+
+    def __str__(self):
+        return f'{self.user.username} - {self.product.name} ({self.rating}★)'
+

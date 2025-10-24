@@ -17,6 +17,7 @@ from .services import (
     build_dynamic_sales_query
 )
 from shop_orders.models import Order
+from users.permissions import CanViewReports
 import logging
 
 logger = logging.getLogger(__name__)
