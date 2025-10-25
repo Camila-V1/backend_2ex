@@ -1,0 +1,2633 @@
+openapi: 3.0.3
+info:
+  title: SmartSales365 API
+  version: 1.0.0
+  description: "\n    Documentación oficial para la API del sistema de gestión comercial\
+    \ inteligente SmartSales365.\n    \n    ## \U0001F3AF Características Principales\n\
+    \    \n    - **Autenticación JWT**: Sistema seguro con tokens de acceso y refresco\n\
+    \    - **E-commerce Completo**: Productos, categorías, órdenes de compra\n   \
+    \ - **Integración Stripe**: Pagos en línea con webhooks automáticos\n    - **Reportes\
+    \ Inteligentes**: Generación de reportes PDF/Excel con IA\n    - **Machine Learning**:\
+    \ Predicciones de ventas con Random Forest\n    - **Comprobantes**: Generación\
+    \ automática de facturas en PDF\n    \n    ## \U0001F510 Autenticación\n    \n\
+    \    1. Obtén un token JWT desde `/api/token/` con tus credenciales\n    2. Usa\
+    \ el token en el header: `Authorization: Bearer <tu_token>`\n    3. Refresca el\
+    \ token cuando expire usando `/api/token/refresh/`\n    \n    ## \U0001F4DA Documentación\
+    \ Adicional\n    \n    - [Guía de URLs](/api/docs/)\n    - [Configuración de Stripe](STRIPE_SETUP_GUIDE.md)\n\
+    \    - [Reportes con IA](AI_REPORTS_IMPLEMENTATION.md)\n    - [Machine Learning](ML_PREDICTIONS_IMPLEMENTATION.md)\n\
+    \    "
+paths:
+  /api/orders/:
+    get:
+      operationId: api_orders_list
+      description: 'ViewSet para ver órdenes. La creación se manejará en un endpoint
+        aparte.
+
+        - list: Un usuario ve sus propias órdenes. Un admin ve todas.
+
+        - retrieve: Un usuario ve el detalle de su orden. Un admin ve cualquiera.'
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+          description: ''
+  /api/orders/{order_id}/create-checkout-session/:
+    post:
+      operationId: api_orders_create_checkout_session_create
+      description: Crea una sesión de pago en Stripe para una orden específica.
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderCreate'
+          description: ''
+  /api/orders/{id}/:
+    get:
+      operationId: api_orders_retrieve
+      description: 'ViewSet para ver órdenes. La creación se manejará en un endpoint
+        aparte.
+
+        - list: Un usuario ve sus propias órdenes. Un admin ve todas.
+
+        - retrieve: Un usuario ve el detalle de su orden. Un admin ve cualquiera.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/orders/admin/:
+    get:
+      operationId: api_orders_admin_list
+      description: 'ViewSet para administración completa de órdenes (solo admins)
+
+        - GET /api/admin/orders/ - Lista todas las órdenes
+
+        - GET /api/admin/orders/{id}/ - Detalle de una orden
+
+        - PATCH /api/admin/orders/{id}/ - Actualizar estado de orden
+
+        - DELETE /api/admin/orders/{id}/ - Eliminar orden'
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+          description: ''
+    post:
+      operationId: api_orders_admin_create
+      description: 'ViewSet para administración completa de órdenes (solo admins)
+
+        - GET /api/admin/orders/ - Lista todas las órdenes
+
+        - GET /api/admin/orders/{id}/ - Detalle de una orden
+
+        - PATCH /api/admin/orders/{id}/ - Actualizar estado de orden
+
+        - DELETE /api/admin/orders/{id}/ - Eliminar orden'
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/orders/admin/{id}/:
+    get:
+      operationId: api_orders_admin_retrieve
+      description: 'ViewSet para administración completa de órdenes (solo admins)
+
+        - GET /api/admin/orders/ - Lista todas las órdenes
+
+        - GET /api/admin/orders/{id}/ - Detalle de una orden
+
+        - PATCH /api/admin/orders/{id}/ - Actualizar estado de orden
+
+        - DELETE /api/admin/orders/{id}/ - Eliminar orden'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    put:
+      operationId: api_orders_admin_update
+      description: 'ViewSet para administración completa de órdenes (solo admins)
+
+        - GET /api/admin/orders/ - Lista todas las órdenes
+
+        - GET /api/admin/orders/{id}/ - Detalle de una orden
+
+        - PATCH /api/admin/orders/{id}/ - Actualizar estado de orden
+
+        - DELETE /api/admin/orders/{id}/ - Eliminar orden'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    patch:
+      operationId: api_orders_admin_partial_update
+      description: 'ViewSet para administración completa de órdenes (solo admins)
+
+        - GET /api/admin/orders/ - Lista todas las órdenes
+
+        - GET /api/admin/orders/{id}/ - Detalle de una orden
+
+        - PATCH /api/admin/orders/{id}/ - Actualizar estado de orden
+
+        - DELETE /api/admin/orders/{id}/ - Eliminar orden'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    delete:
+      operationId: api_orders_admin_destroy
+      description: 'ViewSet para administración completa de órdenes (solo admins)
+
+        - GET /api/admin/orders/ - Lista todas las órdenes
+
+        - GET /api/admin/orders/{id}/ - Detalle de una orden
+
+        - PATCH /api/admin/orders/{id}/ - Actualizar estado de orden
+
+        - DELETE /api/admin/orders/{id}/ - Eliminar orden'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '204':
+          description: No response body
+  /api/orders/admin/{id}/update_status/:
+    post:
+      operationId: api_orders_admin_update_status_create
+      description: 'Endpoint especial para cambiar el estado de una orden
+
+        POST /api/admin/orders/{id}/update_status/
+
+        Body: {"status": "shipped"}'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/orders/admin/analytics/sales/:
+    get:
+      operationId: api_orders_admin_analytics_sales_retrieve
+      description: Análisis detallado de ventas diarias (últimos 30 días)
+      tags:
+      - Admin
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesAnalyticsResponse'
+          description: ''
+  /api/orders/admin/dashboard/:
+    get:
+      operationId: api_orders_admin_dashboard_retrieve
+      description: Dashboard con estadísticas administrativas. Incluye overview, ventas,
+        productos top, órdenes recientes y stock bajo.
+      tags:
+      - Admin
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+          description: ''
+  /api/orders/admin/users/:
+    get:
+      operationId: api_orders_admin_users_retrieve
+      description: Lista de todos los usuarios del sistema (excepto administradores)
+        con sus estadísticas de compras
+      tags:
+      - Admin
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUsersResponse'
+          description: ''
+  /api/orders/cart/add-natural-language/:
+    post:
+      operationId: api_orders_cart_add_natural_language_create
+      description: '🎤 Vista para agregar productos al carrito usando lenguaje natural
+        (texto o voz)
+
+        POST /api/cart/add-natural-language/
+
+
+        Ejemplos de comandos:
+
+        - "Agrega 2 smartphones al carrito"
+
+        - "Quiero 3 laptops y 1 mouse"
+
+        - "Añade el curso de Python"
+
+        - "Comprar 5 auriculares bluetooth"'
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NLPCartRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NLPCartRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NLPCartRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NLPCartRequest'
+          description: ''
+  /api/orders/cart/suggestions/:
+    get:
+      operationId: api_orders_cart_suggestions_retrieve
+      description: '🔍 Vista para obtener sugerencias de productos (autocompletado)
+
+        GET /api/cart/suggestions/?q=smart'
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductSuggestionsResponse'
+          description: ''
+  /api/orders/create/:
+    post:
+      operationId: api_orders_create_create
+      description: 'Vista para crear una nueva orden a partir del carrito de compras.
+
+        Permisos: CAJERO, MANAGER o ADMIN pueden crear órdenes.'
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderCreate'
+          description: ''
+  /api/orders/stripe-webhook/:
+    post:
+      operationId: api_orders_stripe_webhook_create
+      description: 'Escucha los eventos de Stripe. Específicamente, cuando una sesión
+        de checkout se completa,
+
+        actualiza el estado de la orden correspondiente a ''PAGADO''.'
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StripeWebhookRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StripeWebhookRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StripeWebhookRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StripeWebhook'
+          description: ''
+  /api/predictions/sales/:
+    get:
+      operationId: api_predictions_sales_retrieve
+      description: 'API endpoint para obtener predicciones de ventas futuras usando
+        el modelo entrenado.
+
+
+        Requiere que el modelo haya sido entrenado previamente con:
+
+        python manage.py train_sales_model'
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesPredictionResponse'
+          description: ''
+  /api/products/:
+    get:
+      operationId: api_products_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
+    post:
+      operationId: api_products_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+  /api/products/{id}/:
+    get:
+      operationId: api_products_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    put:
+      operationId: api_products_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    patch:
+      operationId: api_products_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProductRequest'
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    delete:
+      operationId: api_products_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '204':
+          description: No response body
+  /api/products/{id}/recommendations/:
+    get:
+      operationId: api_products_recommendations_retrieve
+      description: 'Sistema de recomendación simple: productos comprados junto con
+        este.
+
+        GET /api/products/{id}/recommendations/'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+  /api/products/{id}/reviews/:
+    get:
+      operationId: api_products_reviews_retrieve_2
+      description: 'Endpoint para gestionar reseñas de un producto.
+
+        GET /api/products/{id}/reviews/ - Lista todas las reseñas
+
+        POST /api/products/{id}/reviews/ - Crear una reseña (requiere autenticación)'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    post:
+      operationId: api_products_reviews_create_2
+      description: 'Endpoint para gestionar reseñas de un producto.
+
+        GET /api/products/{id}/reviews/ - Lista todas las reseñas
+
+        POST /api/products/{id}/reviews/ - Crear una reseña (requiere autenticación)'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+  /api/products/categories/:
+    get:
+      operationId: api_products_categories_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+          description: ''
+    post:
+      operationId: api_products_categories_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/products/categories/{id}/:
+    get:
+      operationId: api_products_categories_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Categoría.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    put:
+      operationId: api_products_categories_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Categoría.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    patch:
+      operationId: api_products_categories_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Categoría.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    delete:
+      operationId: api_products_categories_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Categoría.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '204':
+          description: No response body
+  /api/products/reviews/:
+    get:
+      operationId: api_products_reviews_list
+      description: 'ViewSet para gestionar reseñas.
+
+        Solo el autor o un admin pueden editar/eliminar una reseña.'
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+          description: ''
+    post:
+      operationId: api_products_reviews_create
+      description: 'ViewSet para gestionar reseñas.
+
+        Solo el autor o un admin pueden editar/eliminar una reseña.'
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+          description: ''
+  /api/products/reviews/{id}/:
+    get:
+      operationId: api_products_reviews_retrieve
+      description: 'ViewSet para gestionar reseñas.
+
+        Solo el autor o un admin pueden editar/eliminar una reseña.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Reseña.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+          description: ''
+    put:
+      operationId: api_products_reviews_update
+      description: Solo el autor o admin pueden actualizar.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Reseña.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+          description: ''
+    patch:
+      operationId: api_products_reviews_partial_update
+      description: 'ViewSet para gestionar reseñas.
+
+        Solo el autor o un admin pueden editar/eliminar una reseña.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Reseña.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedReviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedReviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedReviewRequest'
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+          description: ''
+    delete:
+      operationId: api_products_reviews_destroy
+      description: Solo el autor o admin pueden eliminar.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Reseña.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '204':
+          description: No response body
+  /api/reports/dynamic-parser/:
+    post:
+      operationId: api_reports_dynamic_parser_create
+      description: 'Vista inteligente que interpreta comandos en lenguaje natural
+        para generar reportes.
+
+
+        Ejemplos de comandos:
+
+        - "Quiero un reporte de ventas del mes de octubre en PDF"
+
+        - "Dame el reporte de ventas de septiembre en excel"
+
+        - "Genera un reporte de productos en PDF"
+
+        - "Reporte de ventas del 01/10/2025 al 31/10/2025 en excel"
+
+        - "Reporte de ventas agrupado por producto del mes de octubre"
+
+        - "Muestra las ventas con nombres de clientes del mes pasado"
+
+        - "Dame un reporte de compras por cliente con sus nombres"'
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DynamicReportRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DynamicReportRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DynamicReportRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DynamicReportRequest'
+          description: ''
+  /api/reports/orders/{order_id}/invoice/:
+    get:
+      operationId: api_reports_orders_invoice_retrieve
+      description: 'Vista para generar el comprobante de venta (invoice/factura) de
+        una orden individual.
+
+
+        Permisos:
+
+        - El usuario debe ser el dueño de la orden O ser administrador'
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+          description: ''
+  /api/token/:
+    post:
+      operationId: api_token_create
+      description: 'Takes a set of user credentials and returns an access and refresh
+        JSON web
+
+        token pair to prove the authentication of those credentials.'
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      security:
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/token/refresh/:
+    post:
+      operationId: api_token_refresh_create
+      description: 'Takes a refresh type JSON web token and returns an access type
+        JSON web
+
+        token if the refresh token is valid.'
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/token/verify/:
+    post:
+      operationId: api_token_verify_create
+      description: 'Takes a token and indicates if it is valid.  This view provides
+        no
+
+        information about a token''s fitness for a particular use.'
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+        required: true
+      security:
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          description: No response body
+  /api/users/:
+    get:
+      operationId: api_users_list
+      description: 'ViewSet que maneja el CRUD completo para los Usuarios.
+
+        - list: GET /api/users/ (Solo Admins)
+
+        - create: POST /api/users/ (Cualquiera puede registrarse)
+
+        - retrieve: GET /api/users/{id}/ (Admin o el propio usuario)
+
+        - update: PUT /api/users/{id}/ (Admin o el propio usuario)
+
+        - partial_update: PATCH /api/users/{id}/ (Admin o el propio usuario)
+
+        - destroy: DELETE /api/users/{id}/ (Admin o el propio usuario)'
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+          description: ''
+    post:
+      operationId: api_users_create
+      description: 'ViewSet que maneja el CRUD completo para los Usuarios.
+
+        - list: GET /api/users/ (Solo Admins)
+
+        - create: POST /api/users/ (Cualquiera puede registrarse)
+
+        - retrieve: GET /api/users/{id}/ (Admin o el propio usuario)
+
+        - update: PUT /api/users/{id}/ (Admin o el propio usuario)
+
+        - partial_update: PATCH /api/users/{id}/ (Admin o el propio usuario)
+
+        - destroy: DELETE /api/users/{id}/ (Admin o el propio usuario)'
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+          description: ''
+  /api/users/{id}/:
+    get:
+      operationId: api_users_retrieve
+      description: 'ViewSet que maneja el CRUD completo para los Usuarios.
+
+        - list: GET /api/users/ (Solo Admins)
+
+        - create: POST /api/users/ (Cualquiera puede registrarse)
+
+        - retrieve: GET /api/users/{id}/ (Admin o el propio usuario)
+
+        - update: PUT /api/users/{id}/ (Admin o el propio usuario)
+
+        - partial_update: PATCH /api/users/{id}/ (Admin o el propio usuario)
+
+        - destroy: DELETE /api/users/{id}/ (Admin o el propio usuario)'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    put:
+      operationId: api_users_update
+      description: 'ViewSet que maneja el CRUD completo para los Usuarios.
+
+        - list: GET /api/users/ (Solo Admins)
+
+        - create: POST /api/users/ (Cualquiera puede registrarse)
+
+        - retrieve: GET /api/users/{id}/ (Admin o el propio usuario)
+
+        - update: PUT /api/users/{id}/ (Admin o el propio usuario)
+
+        - partial_update: PATCH /api/users/{id}/ (Admin o el propio usuario)
+
+        - destroy: DELETE /api/users/{id}/ (Admin o el propio usuario)'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    patch:
+      operationId: api_users_partial_update
+      description: 'ViewSet que maneja el CRUD completo para los Usuarios.
+
+        - list: GET /api/users/ (Solo Admins)
+
+        - create: POST /api/users/ (Cualquiera puede registrarse)
+
+        - retrieve: GET /api/users/{id}/ (Admin o el propio usuario)
+
+        - update: PUT /api/users/{id}/ (Admin o el propio usuario)
+
+        - partial_update: PATCH /api/users/{id}/ (Admin o el propio usuario)
+
+        - destroy: DELETE /api/users/{id}/ (Admin o el propio usuario)'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    delete:
+      operationId: api_users_destroy
+      description: 'ViewSet que maneja el CRUD completo para los Usuarios.
+
+        - list: GET /api/users/ (Solo Admins)
+
+        - create: POST /api/users/ (Cualquiera puede registrarse)
+
+        - retrieve: GET /api/users/{id}/ (Admin o el propio usuario)
+
+        - update: PUT /api/users/{id}/ (Admin o el propio usuario)
+
+        - partial_update: PATCH /api/users/{id}/ (Admin o el propio usuario)
+
+        - destroy: DELETE /api/users/{id}/ (Admin o el propio usuario)'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '204':
+          description: No response body
+  /api/users/profile/:
+    get:
+      operationId: api_users_profile_retrieve
+      description: Obtiene el perfil del usuario autenticado actualmente
+      tags:
+      - Users
+      security:
+      - jwtAuth: []
+      - Bearer:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+components:
+  schemas:
+    AdminUser:
+      type: object
+      description: Serializer para usuario en lista de admin
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        is_active:
+          type: boolean
+        date_joined:
+          type: string
+          format: date-time
+        total_orders:
+          type: integer
+        total_spent:
+          type: number
+          format: double
+      required:
+      - date_joined
+      - email
+      - first_name
+      - id
+      - is_active
+      - last_name
+      - total_orders
+      - total_spent
+      - username
+    AdminUsersResponse:
+      type: object
+      description: Serializer para respuesta de lista de usuarios
+      properties:
+        count:
+          type: integer
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUser'
+      required:
+      - count
+      - users
+    BlankEnum:
+      enum:
+      - ''
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nombre de Categoría
+          maxLength: 255
+        description:
+          type: string
+          title: Descripción
+      required:
+      - id
+      - name
+    CategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nombre de Categoría
+          maxLength: 255
+        description:
+          type: string
+          title: Descripción
+      required:
+      - name
+    DailySales:
+      type: object
+      description: Serializer para ventas diarias
+      properties:
+        day:
+          type: string
+          format: date
+        orders_count:
+          type: integer
+        revenue:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+      required:
+      - day
+      - orders_count
+      - revenue
+    DashboardOverview:
+      type: object
+      description: Serializer para overview del dashboard
+      properties:
+        total_orders:
+          type: integer
+        total_users:
+          type: integer
+        total_products:
+          type: integer
+        active_products:
+          type: integer
+        total_revenue:
+          type: number
+          format: double
+      required:
+      - active_products
+      - total_orders
+      - total_products
+      - total_revenue
+      - total_users
+    DashboardResponse:
+      type: object
+      description: Serializer para respuesta completa del dashboard
+      properties:
+        overview:
+          $ref: '#/components/schemas/DashboardOverview'
+        sales:
+          $ref: '#/components/schemas/DashboardSales'
+        orders_by_status:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        top_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopProduct'
+        recent_orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        low_stock_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/LowStockProduct'
+        _from_cache:
+          type: boolean
+          title: ' from cache'
+      required:
+      - _from_cache
+      - low_stock_products
+      - orders_by_status
+      - overview
+      - recent_orders
+      - sales
+      - top_products
+    DashboardSales:
+      type: object
+      description: Serializer para datos de ventas del dashboard
+      properties:
+        current_month_revenue:
+          type: number
+          format: double
+        last_month_revenue:
+          type: number
+          format: double
+        growth_percentage:
+          type: number
+          format: double
+      required:
+      - current_month_revenue
+      - growth_percentage
+      - last_month_revenue
+    DynamicReportRequest:
+      type: object
+      description: Serializer para solicitud de reporte dinámico con lenguaje natural
+      properties:
+        prompt:
+          type: string
+          description: "Comando en lenguaje natural para generar reportes.\n     \
+            \   \n        Ejemplos:\n        - \"Quiero un reporte de ventas del mes\
+            \ de octubre en PDF\"\n        - \"Dame el reporte de ventas de septiembre\
+            \ en excel\"\n        - \"Genera un reporte de productos en PDF\"\n  \
+            \      - \"Reporte de ventas del 01/10/2025 al 31/10/2025 en excel\"\n\
+            \        - \"Reporte de ventas agrupado por producto del mes de octubre\"\
+            \n        - \"Muestra las ventas con nombres de clientes del mes pasado\"\
+            \n        "
+      required:
+      - prompt
+    DynamicReportRequestRequest:
+      type: object
+      description: Serializer para solicitud de reporte dinámico con lenguaje natural
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+          description: "Comando en lenguaje natural para generar reportes.\n     \
+            \   \n        Ejemplos:\n        - \"Quiero un reporte de ventas del mes\
+            \ de octubre en PDF\"\n        - \"Dame el reporte de ventas de septiembre\
+            \ en excel\"\n        - \"Genera un reporte de productos en PDF\"\n  \
+            \      - \"Reporte de ventas del 01/10/2025 al 31/10/2025 en excel\"\n\
+            \        - \"Reporte de ventas agrupado por producto del mes de octubre\"\
+            \n        - \"Muestra las ventas con nombres de clientes del mes pasado\"\
+            \n        "
+      required:
+      - prompt
+    InvoiceResponse:
+      type: object
+      description: Serializer para respuesta de factura PDF (solo para documentación)
+      properties:
+        message:
+          type: string
+          default: PDF generado
+        filename:
+          type: string
+      required:
+      - filename
+    LowStockProduct:
+      type: object
+      description: Serializer para productos con stock bajo
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        stock:
+          type: integer
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+      required:
+      - id
+      - name
+      - price
+      - stock
+    ModelInfo:
+      type: object
+      description: Serializer para información del modelo ML
+      properties:
+        trained:
+          type: boolean
+        model_path:
+          type: string
+        prediction_period:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+      - end_date
+      - model_path
+      - prediction_period
+      - start_date
+      - trained
+    NLPCartRequest:
+      type: object
+      description: Serializer para solicitud de carrito con lenguaje natural
+      properties:
+        prompt:
+          type: string
+          description: 'Comando en lenguaje natural, ej: ''Agrega 2 smartphones al
+            carrito'''
+      required:
+      - prompt
+    NLPCartRequestRequest:
+      type: object
+      description: Serializer para solicitud de carrito con lenguaje natural
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+          description: 'Comando en lenguaje natural, ej: ''Agrega 2 smartphones al
+            carrito'''
+      required:
+      - prompt
+    NullEnum:
+      enum:
+      - null
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        total_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        total_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - items
+      - total_amount
+      - user
+    OrderCreate:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemCreate'
+      required:
+      - items
+    OrderCreateRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemCreateRequest'
+      required:
+      - items
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product:
+          type: integer
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+      required:
+      - id
+      - price
+    OrderItemCreate:
+      type: object
+      properties:
+        product_id:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+      required:
+      - product_id
+      - quantity
+    OrderItemCreateRequest:
+      type: object
+      properties:
+        product_id:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+      required:
+      - product_id
+      - quantity
+    OrderItemRequest:
+      type: object
+      properties:
+        product:
+          type: integer
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+      required:
+      - price
+    OrderRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        total_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+    PatchedCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nombre de Categoría
+          maxLength: 255
+        description:
+          type: string
+          title: Descripción
+    PatchedOrderRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        total_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+    PatchedProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nombre del Producto
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          title: Descripción
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Precio
+        stock:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        category:
+          type: integer
+          nullable: true
+          title: Categoría
+        warranty_info:
+          type: string
+          title: Información de Garantía
+          maxLength: 255
+        is_active:
+          type: boolean
+          title: ¿Está activo?
+    PatchedReviewRequest:
+      type: object
+      description: Serializer para Reseñas de productos.
+      properties:
+        product:
+          type: integer
+          title: Producto
+        rating:
+          type: integer
+          maximum: 5
+          minimum: 1
+          title: Calificación (1-5)
+        comment:
+          type: string
+          title: Comentario
+    PatchedUserProfileRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+    PredictionItem:
+      type: object
+      description: Serializer para un item de predicción individual
+      properties:
+        date:
+          type: string
+          format: date
+          description: Fecha de la predicción
+        predicted_sales:
+          type: number
+          format: double
+          description: Cantidad de unidades predichas
+        day_of_week:
+          type: string
+          description: Día de la semana
+      required:
+      - date
+      - day_of_week
+      - predicted_sales
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nombre del Producto
+          maxLength: 255
+        description:
+          type: string
+          title: Descripción
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Precio
+        stock:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        category:
+          type: integer
+          nullable: true
+          title: Categoría
+        category_name:
+          type: string
+          readOnly: true
+        category_details:
+          allOf:
+          - $ref: '#/components/schemas/Category'
+          readOnly: true
+        warranty_info:
+          type: string
+          title: Información de Garantía
+          maxLength: 255
+        is_active:
+          type: boolean
+          title: ¿Está activo?
+        average_rating:
+          type: number
+          format: double
+          readOnly: true
+        review_count:
+          type: integer
+          readOnly: true
+      required:
+      - average_rating
+      - category_details
+      - category_name
+      - description
+      - id
+      - name
+      - price
+      - review_count
+    ProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nombre del Producto
+          maxLength: 255
+        description:
+          type: string
+          minLength: 1
+          title: Descripción
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Precio
+        stock:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        category:
+          type: integer
+          nullable: true
+          title: Categoría
+        warranty_info:
+          type: string
+          title: Información de Garantía
+          maxLength: 255
+        is_active:
+          type: boolean
+          title: ¿Está activo?
+      required:
+      - description
+      - name
+      - price
+    ProductSuggestion:
+      type: object
+      description: Serializer para sugerencias de productos
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        category:
+          type: string
+      required:
+      - category
+      - id
+      - name
+      - price
+    ProductSuggestionsResponse:
+      type: object
+      description: Serializer para respuesta de sugerencias
+      properties:
+        query:
+          type: string
+        count:
+          type: integer
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSuggestion'
+      required:
+      - count
+      - query
+      - suggestions
+    Review:
+      type: object
+      description: Serializer para Reseñas de productos.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product:
+          type: integer
+          title: Producto
+        user:
+          type: integer
+          readOnly: true
+          title: Usuario
+        user_username:
+          type: string
+          readOnly: true
+        user_email:
+          type: string
+          readOnly: true
+        rating:
+          type: integer
+          maximum: 5
+          minimum: 1
+          title: Calificación (1-5)
+        comment:
+          type: string
+          title: Comentario
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Fecha de creación
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Última actualización
+      required:
+      - created_at
+      - id
+      - product
+      - rating
+      - updated_at
+      - user
+      - user_email
+      - user_username
+    ReviewRequest:
+      type: object
+      description: Serializer para Reseñas de productos.
+      properties:
+        product:
+          type: integer
+          title: Producto
+        rating:
+          type: integer
+          maximum: 5
+          minimum: 1
+          title: Calificación (1-5)
+        comment:
+          type: string
+          title: Comentario
+      required:
+      - product
+      - rating
+    RoleEnum:
+      enum:
+      - ADMIN
+      - MANAGER
+      - CAJERO
+      type: string
+      description: '* `ADMIN` - Administrador
+
+        * `MANAGER` - Gerente
+
+        * `CAJERO` - Cajero'
+    SalesAnalyticsResponse:
+      type: object
+      description: Serializer para respuesta de analytics de ventas
+      properties:
+        daily_sales:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailySales'
+      required:
+      - daily_sales
+    SalesPredictionResponse:
+      type: object
+      description: Serializer para respuesta de predicciones de ventas
+      properties:
+        predictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PredictionItem'
+        model_info:
+          $ref: '#/components/schemas/ModelInfo'
+      required:
+      - model_info
+      - predictions
+    StatusEnum:
+      enum:
+      - PENDING
+      - PAID
+      - SHIPPED
+      - CANCELLED
+      type: string
+      description: '* `PENDING` - Pendiente
+
+        * `PAID` - Pagado
+
+        * `SHIPPED` - Enviado
+
+        * `CANCELLED` - Cancelado'
+    StripeWebhook:
+      type: object
+      description: Serializer para webhook de Stripe (solo para documentación)
+      properties:
+        type:
+          type: string
+          description: Tipo de evento de Stripe
+        data:
+          description: Datos del evento
+      required:
+      - data
+      - type
+    StripeWebhookRequest:
+      type: object
+      description: Serializer para webhook de Stripe (solo para documentación)
+      properties:
+        type:
+          type: string
+          minLength: 1
+          description: Tipo de evento de Stripe
+        data:
+          description: Datos del evento
+      required:
+      - data
+      - type
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    TokenVerifyRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - token
+    TopProduct:
+      type: object
+      description: Serializer para productos más vendidos
+      properties:
+        product__id:
+          type: integer
+        product__name:
+          type: string
+        product__price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        total_sold:
+          type: integer
+        total_revenue:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+      required:
+      - product__id
+      - product__name
+      - product__price
+      - total_revenue
+      - total_sold
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+      required:
+      - id
+      - is_active
+      - is_staff
+      - is_superuser
+      - username
+    UserProfileRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+    UserRegistration:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - first_name
+      - id
+      - last_name
+      - role
+      - username
+    UserRegistrationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password2:
+          type: string
+          writeOnly: true
+          minLength: 1
+          title: Confirm password
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - first_name
+      - last_name
+      - password
+      - password2
+      - role
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
