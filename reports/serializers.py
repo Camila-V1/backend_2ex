@@ -32,3 +32,46 @@ class InvoiceResponseSerializer(serializers.Serializer):
     """Serializer para respuesta de factura PDF (solo para documentación)"""
     message = serializers.CharField(default="PDF generado")
     filename = serializers.CharField()
+
+
+# ============================================================================
+# SERIALIZERS PARA PREVISUALIZACIÓN DE REPORTES
+# ============================================================================
+
+class SalesReportPreviewSerializer(serializers.Serializer):
+    """Serializer para previsualización de reporte de ventas"""
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    total_orders = serializers.IntegerField()
+    total_revenue = serializers.DecimalField(max_digits=10, decimal_places=2)
+    orders = serializers.ListField(
+        child=serializers.DictField(),
+        help_text="Lista de órdenes con detalles"
+    )
+
+
+class ProductsReportPreviewSerializer(serializers.Serializer):
+    """Serializer para previsualización de reporte de productos"""
+    total_products = serializers.IntegerField()
+    total_stock = serializers.IntegerField()
+    total_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    products = serializers.ListField(
+        child=serializers.DictField(),
+        help_text="Lista de productos con detalles"
+    )
+
+
+class DynamicReportPreviewSerializer(serializers.Serializer):
+    """Serializer para previsualización de reporte dinámico"""
+    title = serializers.CharField()
+    start_date = serializers.DateField(required=False)
+    end_date = serializers.DateField(required=False)
+    headers = serializers.ListField(
+        child=serializers.CharField(),
+        help_text="Encabezados de las columnas"
+    )
+    data = serializers.ListField(
+        child=serializers.DictField(),
+        help_text="Datos del reporte"
+    )
+    total_records = serializers.IntegerField()

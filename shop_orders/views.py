@@ -89,9 +89,7 @@ class CreateOrderView(APIView):
                         price=product.price  # Guardamos el precio actual del producto
                     )
                     
-                    # 4. Actualizar el stock del producto
-                    product.stock -= quantity
-                    product.save()
+                    # NO reducir stock aquí - se hará cuando el webhook de Stripe confirme el pago
 
                     total_order_price += order_item.price * order_item.quantity
                 
@@ -204,6 +202,25 @@ class StripeWebhookView(APIView):
                 order = Order.objects.get(id=order_id)
                 # Verificar que la orden no esté ya pagada para evitar reprocesarla
                 if order.status == Order.OrderStatus.PENDING:
+                    # ✅ Reducir stock SOLO cuando se confirma el pago
+                    for item in order.items.all():
+                        if item.product:
+                            product = item.product
+                            # Verificar que haya stock suficiente
+                            if product.stock >= item.quantity:
+                                product.stock -= item.quantity
+                                product.save()
+                            else:
+                                # Si no hay stock, cancelar la orden y reembolsar
+                                order.status = Order.OrderStatus.CANCELLED
+                                order.save()
+                                # TODO: Implementar reembolso automático en Stripe
+                                return Response(
+                                    {'error': f'Stock insuficiente para {product.name}'},
+                                    status=status.HTTP_400_BAD_REQUEST
+                                )
+                    
+                    # Cambiar estado a PAID después de reducir stock
                     order.status = Order.OrderStatus.PAID
                     order.save()
             except Order.DoesNotExist:
@@ -477,13 +494,18 @@ class CartNaturalLanguageView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Si la acción es 'add', crear la orden
+        # Si la acción es 'add', devolver productos para agregar al carrito
         if result['action'] == 'add' and result['items']:
             try:
-                with transaction.atomic():
-                    # Validar stock para cada producto
-                    for item in result['items']:
+                # Validar stock y obtener información de productos
+                items_data = []
+                total_price = 0
+                
+                for item in result['items']:
+                    try:
                         product = Product.objects.get(id=item['product_id'])
+                        
+                        # Validar stock disponible
                         if product.stock < item['quantity']:
                             return Response(
                                 {
@@ -493,58 +515,53 @@ class CartNaturalLanguageView(APIView):
                                 },
                                 status=status.HTTP_400_BAD_REQUEST
                             )
-                    
-                    # Crear orden con status PENDING
-                    order = Order.objects.create(
-                        user=request.user,
-                        status='PENDING'
-                    )
-                    
-                    # Crear items de la orden y calcular total
-                    total_price = 0
-                    for item in result['items']:
-                        product = Product.objects.get(id=item['product_id'])
                         
-                        OrderItem.objects.create(
-                            order=order,
-                            product=product,
-                            quantity=item['quantity'],
-                            price=product.price
-                        )
-                        
-                        # Actualizar stock
-                        product.stock -= item['quantity']
-                        product.save()
+                        # Agregar información del producto
+                        items_data.append({
+                            'product_id': product.id,
+                            'name': product.name,
+                            'description': product.description,
+                            'price': str(product.price),
+                            'quantity': item['quantity'],
+                            'subtotal': str(product.price * item['quantity']),
+                            'stock_available': product.stock,
+                            'image_url': product.image_url if hasattr(product, 'image_url') else None
+                        })
                         
                         total_price += product.price * item['quantity']
                     
-                    order.total_price = total_price
-                    order.save()
-                    
-                    return Response(
-                        {
-                            'success': True,
-                            'message': 'Orden creada exitosamente',
-                            'prompt': prompt,
-                            'interpreted_action': result['action'],
-                            'order': {
-                                'id': order.id,
-                                'total': str(order.total_price),
-                                'status': order.status,
-                                'items': result['items']
-                            }
-                        },
-                        status=status.HTTP_201_CREATED
-                    )
+                    except Product.DoesNotExist:
+                        return Response(
+                            {
+                                'success': False,
+                                'error': f'Producto con ID {item["product_id"]} no encontrado',
+                                'prompt': prompt
+                            },
+                            status=status.HTTP_404_NOT_FOUND
+                        )
+                
+                # Devolver productos para que el frontend los agregue al carrito
+                return Response(
+                    {
+                        'success': True,
+                        'message': f'Se encontraron {len(items_data)} producto(s) para agregar al carrito',
+                        'prompt': prompt,
+                        'interpreted_action': result['action'],
+                        'items': items_data,
+                        'total': str(total_price),
+                        'cart_action': 'add_to_cart'  # Indica al frontend que agregue al carrito
+                    },
+                    status=status.HTTP_200_OK
+                )
             
-            except Product.DoesNotExist:
+            except Exception as e:
                 return Response(
                     {
                         'success': False,
-                        'error': 'Uno de los productos no existe',
+                        'error': f'Error al procesar la solicitud: {str(e)}',
                         'prompt': prompt
                     },
-                    status=status.HTTP_404_NOT_FOUND
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
             except Exception as e:
                 return Response(

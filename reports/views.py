@@ -19,7 +19,10 @@ from .services import (
 from .serializers import (
     DynamicReportRequestSerializer,
     DynamicReportResponseSerializer,
-    InvoiceResponseSerializer
+    InvoiceResponseSerializer,
+    SalesReportPreviewSerializer,
+    ProductsReportPreviewSerializer,
+    DynamicReportPreviewSerializer
 )
 from shop_orders.models import Order
 from users.permissions import CanViewReports
@@ -384,5 +387,229 @@ class OrderInvoiceView(APIView):
             logger.error(f"❌ Error al generar invoice: {str(e)}")
             return Response(
                 {"error": f"Error al generar el comprobante: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+# ============================================================================
+# VISTAS DE PREVISUALIZACIÓN (RETORNAN JSON PARA EL FRONTEND)
+# ============================================================================
+
+class SalesReportPreviewView(APIView):
+    """
+    Vista para previsualizar datos de ventas en JSON antes de descargar PDF/Excel.
+    
+    El frontend puede mostrar los datos en una tabla y luego el usuario
+    decide si descargar en PDF o Excel usando el endpoint original.
+    """
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = SalesReportPreviewSerializer
+
+    def get(self, request, *args, **kwargs):
+        logger.info(f"👁️ SalesReportPreviewView - GET request recibida")
+        
+        # Obtener parámetros
+        start_date_str = request.GET.get('start_date')
+        end_date_str = request.GET.get('end_date')
+        
+        if not start_date_str or not end_date_str:
+            return Response(
+                {"error": "Los parámetros 'start_date' y 'end_date' son requeridos (YYYY-MM-DD)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response(
+                {"error": "Formato de fecha inválido. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Obtener órdenes del rango de fechas
+        orders = Order.objects.filter(
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date,
+            status='PAID'
+        ).select_related('user').prefetch_related('items__product').order_by('-created_at')
+        
+        # Preparar datos
+        orders_data = []
+        total_revenue = 0
+        
+        for order in orders:
+            order_info = {
+                'order_id': order.id,
+                'date': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'customer': order.user.get_full_name() or order.user.username,
+                'customer_email': order.user.email,
+                'total': float(order.total_price),
+                'items_count': order.items.count(),
+                'items': [
+                    {
+                        'product': item.product.name,
+                        'quantity': item.quantity,
+                        'price': float(item.price),
+                        'subtotal': float(item.quantity * item.price)
+                    }
+                    for item in order.items.all()
+                ]
+            }
+            orders_data.append(order_info)
+            total_revenue += float(order.total_price)
+        
+        response_data = {
+            'start_date': start_date,
+            'end_date': end_date,
+            'total_orders': orders.count(),
+            'total_revenue': round(total_revenue, 2),
+            'orders': orders_data
+        }
+        
+        logger.info(f"✅ Preview generado: {orders.count()} órdenes, ${total_revenue:.2f}")
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class ProductsReportPreviewView(APIView):
+    """
+    Vista para previsualizar datos de productos en JSON antes de descargar PDF/Excel.
+    """
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = ProductsReportPreviewSerializer
+
+    def get(self, request, *args, **kwargs):
+        logger.info(f"👁️ ProductsReportPreviewView - GET request recibida")
+        
+        from products.models import Product
+        
+        # Obtener todos los productos activos
+        products = Product.objects.filter(is_active=True).order_by('category__name', 'name')
+        
+        # Preparar datos
+        products_data = []
+        total_stock = 0
+        total_value = 0
+        
+        for product in products:
+            product_value = float(product.price * product.stock)
+            product_info = {
+                'id': product.id,
+                'name': product.name,
+                'category': product.category.name if product.category else 'Sin categoría',
+                'price': float(product.price),
+                'stock': product.stock,
+                'value': round(product_value, 2),
+                'description': product.description[:100] if product.description else ''
+            }
+            products_data.append(product_info)
+            total_stock += product.stock
+            total_value += product_value
+        
+        response_data = {
+            'total_products': products.count(),
+            'total_stock': total_stock,
+            'total_value': round(total_value, 2),
+            'products': products_data
+        }
+        
+        logger.info(f"✅ Preview generado: {products.count()} productos")
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class DynamicReportPreviewView(APIView):
+    """
+    Vista para previsualizar datos de reporte dinámico en JSON.
+    
+    Interpreta el comando en lenguaje natural y retorna los datos en JSON
+    para que el frontend pueda mostrarlos antes de descargar.
+    """
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = DynamicReportPreviewSerializer
+
+    def post(self, request, *args, **kwargs):
+        prompt = request.data.get('prompt', '')
+        
+        logger.info(f"👁️ DynamicReportPreviewView - Prompt recibido: {prompt}")
+
+        if not prompt:
+            return Response(
+                {"error": "El prompt no puede estar vacío."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Usar el mismo parser que la vista original
+        from reports.views import DynamicReportParserView
+        parser_view = DynamicReportParserView()
+        parsed = parser_view.parse_prompt(prompt)
+        
+        # Para reportes de PRODUCTOS
+        if parsed['report_type'] == 'productos':
+            logger.info(f"📦 Generando preview de productos...")
+            
+            from products.models import Product
+            products = Product.objects.filter(is_active=True).order_by('category__name', 'name')
+            
+            data = []
+            headers = ['ID', 'Producto', 'Categoría', 'Precio', 'Stock', 'Valor Total']
+            
+            for product in products:
+                data.append({
+                    'ID': product.id,
+                    'Producto': product.name,
+                    'Categoría': product.category.name if product.category else 'Sin categoría',
+                    'Precio': f"${product.price:.2f}",
+                    'Stock': product.stock,
+                    'Valor Total': f"${(product.price * product.stock):.2f}"
+                })
+            
+            response_data = {
+                'title': 'Reporte de Productos',
+                'headers': headers,
+                'data': data,
+                'total_records': len(data)
+            }
+            
+            logger.info(f"✅ Preview de productos generado: {len(data)} registros")
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        # Para reportes de VENTAS con consulta dinámica
+        try:
+            logger.info(f"💰 Generando preview de ventas...")
+            
+            # Construir la consulta SQL dinámica (igual que en la vista original)
+            queryset, headers, formatter = build_dynamic_sales_query(parsed)
+            
+            # Procesar los datos
+            data = []
+            for item in queryset:
+                data.append(formatter(item))
+            
+            # Determinar título del reporte
+            if parsed['group_by'] == 'product':
+                title = f"Ventas por Producto ({parsed['start_date']} a {parsed['end_date']})"
+            elif parsed['group_by'] == 'customer':
+                title = f"Ventas por Cliente ({parsed['start_date']} a {parsed['end_date']})"
+            else:
+                title = f"Reporte de Ventas ({parsed['start_date']} a {parsed['end_date']})"
+            
+            response_data = {
+                'title': title,
+                'start_date': parsed['start_date'],
+                'end_date': parsed['end_date'],
+                'headers': headers,
+                'data': data,
+                'total_records': len(data)
+            }
+            
+            logger.info(f"✅ Preview de ventas generado: {len(data)} registros")
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"❌ Error al generar preview: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return Response(
+                {"error": f"Error al generar el preview: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

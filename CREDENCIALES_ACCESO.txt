@@ -1,0 +1,176 @@
+
+╔════════════════════════════════════════════════════════════════╗
+║           CREDENCIALES DE ACCESO - ECOMMERCE API              ║
+║                    Base de Datos Poblada                       ║
+╚════════════════════════════════════════════════════════════════╝
+
+📅 Generado: 2025-10-25 18:24:15
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👑 ADMINISTRADORES (ADMIN)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Usuario: admin
+   Email: admin@ecommerce.com
+   Password: admin123
+   Rol: ADMIN (Superusuario)
+   Permisos: Acceso total al sistema
+
+2. Usuario: maria_admin
+   Email: maria.admin@ecommerce.com
+   Password: maria123
+   Rol: ADMIN
+   Permisos: Gestión completa sin superusuario
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👔 MANAGERS (MANAGER)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. Usuario: carlos_manager
+   Email: carlos.manager@ecommerce.com
+   Password: carlos123
+   Rol: MANAGER
+   Permisos: Gestión de órdenes, productos, reportes
+
+4. Usuario: ana_manager
+   Email: ana.manager@ecommerce.com
+   Password: ana123
+   Rol: MANAGER
+   Permisos: Gestión de órdenes, productos, reportes
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💰 CAJEROS (CAJERO)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. Usuario: luis_cajero
+   Email: luis.cajero@ecommerce.com
+   Password: luis123
+   Rol: CAJERO
+   Permisos: Ver órdenes y productos
+
+6. Usuario: sofia_cajero
+   Email: sofia.cajero@ecommerce.com
+   Password: sofia123
+   Rol: CAJERO
+   Permisos: Ver órdenes y productos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👥 CLIENTES (Sin rol especial)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7. Usuario: juan_cliente
+   Email: juan@email.com
+   Password: juan123
+   Rol: Cliente
+   
+8. Usuario: laura_cliente
+   Email: laura@email.com
+   Password: laura123
+   Rol: Cliente
+
+9. Usuario: pedro_cliente
+   Email: pedro@email.com
+   Password: pedro123
+   Rol: Cliente
+
+10. Usuario: carmen_cliente
+    Email: carmen@email.com
+    Password: carmen123
+    Rol: Cliente
+
+11. Usuario: diego_cliente
+    Email: diego@email.com
+    Password: diego123
+    Rol: Cliente
+
+12. Usuario: elena_cliente
+    Email: elena@email.com
+    Password: elena123
+    Rol: Cliente
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 ESTADÍSTICAS DE LA BASE DE DATOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Usuarios: 12
+✓ Categorías: 8
+✓ Productos: 35
+✓ Reviews: 151
+✓ Órdenes: 167
+✓ Órdenes PAID (para ML): 138
+✓ Items en órdenes: 526
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔐 INFORMACIÓN DE AUTENTICACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+API Base URL: http://127.0.0.1:8000/api/
+
+Endpoints de autenticación:
+  • Login: POST /api/users/login/
+  • Registro: POST /api/users/register/
+  • Profile: GET /api/users/profile/
+
+Formato de login:
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+Respuesta (incluye tokens JWT):
+{
+  "refresh": "token_refresh...",
+  "access": "token_access...",
+  "user": {...}
+}
+
+Usar token en headers:
+Authorization: Bearer <access_token>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🤖 MACHINE LEARNING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+La base de datos ha sido poblada con suficientes datos para entrenar
+el modelo de predicción de ventas:
+
+✓ 138 órdenes PAID (mínimo requerido: 10)
+✓ Historial de 12 meses de ventas
+✓ Múltiples productos y categorías
+
+Para entrenar el modelo:
+  python manage.py train_sales_model
+
+Para obtener predicciones:
+  GET /api/predictions/sales-forecast/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 NOTAS IMPORTANTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠ Estas credenciales son SOLO para desarrollo y pruebas
+⚠ NO usar en producción
+⚠ Cambiar todas las contraseñas antes de deploy
+
+✓ Todas las contraseñas siguen el patrón: <nombre>123
+✓ Los datos son generados aleatoriamente para pruebas
+✓ Las órdenes tienen fechas de los últimos 12 meses
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔗 ENLACES ÚTILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+• API Docs (Swagger): http://127.0.0.1:8000/api/docs/
+• API Docs (ReDoc): http://127.0.0.1:8000/api/redoc/
+• Django Admin: http://127.0.0.1:8000/admin/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

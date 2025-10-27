@@ -45,6 +45,7 @@ urlpatterns = [
     path('api/orders/', include('shop_orders.urls')),
     path('api/', include('predictions.urls')),  # Predicciones con ML
     path('api/reports/', include('reports.urls')),  # Reportes (sales, products, dynamic-parser, invoices)
+    path('api/audit/', include('audit_log.urls')),  # Sistema de auditoría y bitácora
     
     # ============================================================================
     # DOCUMENTACIÓN DE LA API (SWAGGER/OpenAPI)

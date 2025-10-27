@@ -155,32 +155,90 @@ class CartNLPService:
     def _find_product(search_term, category=None):
         """
         Busca un producto por nombre o descripción
-        Implementa búsqueda difusa (fuzzy search)
+        Implementa búsqueda difusa mejorada (fuzzy search)
+        Maneja singulares/plurales y búsqueda por palabras clave
         """
-        # Buscar por coincidencia exacta (case-insensitive)
+        # Normalizar búsqueda: minúsculas y quitar espacios extra
+        search_normalized = search_term.lower().strip()
+        
+        # Quitar plurales comunes (s, es)
+        search_singular = search_normalized.rstrip('s')
+        if search_singular.endswith('e'):
+            search_singular = search_singular.rstrip('es')
+        
+        # 1. Buscar por coincidencia exacta en nombre (más relevante)
         product = Product.objects.filter(
-            name__icontains=search_term,
+            name__icontains=search_normalized,
             is_active=True
         ).first()
         
         if product:
             return product
         
-        # Buscar en descripción
+        # 2. Buscar por singular
+        if search_singular != search_normalized:
+            product = Product.objects.filter(
+                name__icontains=search_singular,
+                is_active=True
+            ).first()
+            
+            if product:
+                return product
+        
+        # 3. Buscar en descripción
         product = Product.objects.filter(
-            description__icontains=search_term,
+            description__icontains=search_normalized,
             is_active=True
         ).first()
         
         if product:
             return product
         
-        # Buscar palabras individuales
-        words = search_term.split()
+        # 4. Buscar palabras individuales (para comandos como "laptop dell")
+        words = search_normalized.split()
         for word in words:
             if len(word) > 3:  # Solo palabras significativas
+                # Buscar en nombre
                 product = Product.objects.filter(
                     name__icontains=word,
+                    is_active=True
+                ).first()
+                if product:
+                    return product
+                
+                # Buscar singular de la palabra
+                word_singular = word.rstrip('s')
+                if word_singular != word:
+                    product = Product.objects.filter(
+                        name__icontains=word_singular,
+                        is_active=True
+                    ).first()
+                    if product:
+                        return product
+        
+        # 5. Mapeo de palabras comunes a productos
+        keyword_mapping = {
+            'celular': 'phone',
+            'telefono': 'phone',
+            'movil': 'phone',
+            'computadora': 'laptop',
+            'portatil': 'laptop',
+            'notebook': 'laptop',
+            'pc': 'laptop',
+            'auricular': 'airpods',
+            'audifonos': 'airpods',
+            'headphones': 'airpods',
+            'tele': 'tv',
+            'television': 'tv',
+            'consola': 'playstation',
+            'raton': 'mouse',
+        }
+        
+        # Buscar con mapeo
+        for key, value in keyword_mapping.items():
+            if key in search_normalized:
+                product = Product.objects.filter(
+                    name__icontains=value,
                     is_active=True
                 ).first()
                 if product:

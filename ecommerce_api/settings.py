@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'reports',  # App de reportes dinámicos
     'predictions',  # App para modelos de ML y predicciones
     'drf_spectacular',  # Documentación automática de API con Swagger
+    'django_filters',  # Filtros avanzados para Django REST Framework
+    'audit_log',  # Sistema de auditoría y bitácora
 ]
 
 MIDDLEWARE = [
@@ -58,6 +60,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'audit_log.middleware.AuditMiddleware',  # Auditoría automática (después de autenticación)
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
