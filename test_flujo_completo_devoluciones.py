@@ -235,28 +235,45 @@ def request_return():
     """Cliente solicita una devolución"""
     global return_id
     print_info("Cliente solicita devolución...")
+    print_info(f"Usando order_id={order_id}, product_id={product_id}")
     
-    response = requests.post(
-        f"{BASE_URL}/deliveries/returns/",
-        json={
-            "order": order_id,
-            "product": product_id,
-            "quantity": 1,
-            "reason": "El producto no cumple con las especificaciones anunciadas. La pantalla tiene píxeles muertos.",
-            "refund_method": "WALLET"
-        },
-        headers=get_auth_header('cliente')
-    )
-    
-    if response.status_code == 201:
-        data = response.json()
-        return_id = data['id']
-        print_success(f"Devolución solicitada - ID: {return_id}")
-        print_data("Devolución", data)
-        return True
-    else:
-        print_error("Error al solicitar devolución")
-        print_data("Error", response.json())
+    try:
+        response = requests.post(
+            f"{BASE_URL}/deliveries/returns/",
+            json={
+                "order_id": order_id,
+                "product_id": product_id,
+                "quantity": 1,
+                "reason": "DEFECTIVE",
+                "description": "El producto no cumple con las especificaciones anunciadas. La pantalla tiene píxeles muertos y no enciende correctamente.",
+                "refund_method": "WALLET"
+            },
+            headers=get_auth_header('cliente')
+        )
+        
+        print_info(f"Status code: {response.status_code}")
+        print_info(f"Response text (primeros 300): {response.text[:300]}")
+        
+        if response.status_code == 201:
+            data = response.json()
+            return_id = data['id']
+            print_success(f"Devolución solicitada - ID: {return_id}")
+            print_data("Devolución", {
+                "id": data['id'],
+                "status": data['status'],
+                "reason": data.get('reason'),
+                "refund_method": data.get('refund_method')
+            })
+            return True
+        else:
+            print_error(f"Error al solicitar devolución (Status: {response.status_code})")
+            try:
+                print_data("Error", response.json())
+            except:
+                print_data("Error", {"message": response.text[:500]})
+            return False
+    except Exception as e:
+        print_error(f"Excepción al solicitar devolución: {str(e)}")
         return False
 
 def get_return_details():
@@ -486,10 +503,11 @@ def test_reject_return_flow():
     response = requests.post(
         f"{BASE_URL}/deliveries/returns/",
         json={
-            "order": order2_id,
-            "product": product_id,
+            "order_id": order2_id,
+            "product_id": product_id,
             "quantity": 1,
-            "reason": "Cambié de opinión",
+            "reason": "CHANGED_MIND",
+            "description": "Cambié de opinión, prefiero otro modelo",
             "refund_method": "ORIGINAL"
         },
         headers=get_auth_header('cliente')
@@ -658,30 +676,83 @@ def main():
         
         # 3. OBTENER UNA ORDEN EXISTENTE DEL CLIENTE
         print_header("PASO 3: OBTENER ORDEN EXISTENTE DEL CLIENTE")
+        global order_id, product_id
+        
         response = requests.get(f"{BASE_URL}/orders/", headers=get_auth_header('cliente'))
         if response.status_code == 200:
             data = response.json()
             orders = data if isinstance(data, list) else data.get('results', [])
-            if len(orders) > 0:
-                order_id = orders[0]['id']
-                print_success(f"Orden existente obtenida - ID: {order_id}")
+            
+            # Buscar una orden DELIVERED primero
+            delivered_order = None
+            paid_order = None
+            
+            for order in orders:
+                if order['status'] == 'DELIVERED':
+                    delivered_order = order
+                    break
+                elif order['status'] == 'PAID' and not paid_order:
+                    paid_order = order
+            
+            if delivered_order:
+                order_id = delivered_order['id']
+                print_success(f"Orden DELIVERED encontrada - ID: {order_id}")
                 print_data("Orden", {
-                    "id": orders[0]['id'],
-                    "status": orders[0]['status'],
-                    "total_price": orders[0].get('total_price', 'N/A')
+                    "id": delivered_order['id'],
+                    "status": delivered_order['status'],
+                    "total_price": delivered_order.get('total_price', 'N/A')
                 })
+                # Obtener items de la orden si están disponibles
+                order_items = delivered_order.get('items', [])
+                if order_items and len(order_items) > 0:
+                    product_from_order = order_items[0].get('product')
+                    if product_from_order:
+                        product_id = product_from_order
+            elif paid_order:
+                order_id = paid_order['id']
+                print_info(f"No hay orden DELIVERED, usando orden PAID - ID: {order_id}")
+                print_data("Orden PAID", {
+                    "id": paid_order['id'],
+                    "status": paid_order['status'],
+                    "total_price": paid_order.get('total_price', 'N/A')
+                })
+                
+                # Obtener items de la orden si están disponibles
+                order_items = paid_order.get('items', [])
+                if order_items and len(order_items) > 0:
+                    product_from_order = order_items[0].get('product')
+                    if product_from_order:
+                        product_id = product_from_order
+                
+                # Intentar marcar como DELIVERED usando el endpoint de admin
+                print_header("PASO 4: MARCAR ORDEN COMO ENTREGADA (ADMIN)")
+                print_info(f"Intentando actualizar orden {order_id} a DELIVERED...")
+                
+                # Usar endpoint de admin orders
+                admin_response = requests.patch(
+                    f"{BASE_URL}/orders/admin/{order_id}/",
+                    json={"status": "DELIVERED"},
+                    headers=get_auth_header('admin')
+                )
+                
+                if admin_response.status_code == 200:
+                    print_success("Orden marcada como DELIVERED exitosamente")
+                    order_data = admin_response.json()
+                    print_data("Orden actualizada", {
+                        "id": order_data['id'],
+                        "status": order_data['status'],
+                        "total_price": order_data.get('total_price', 'N/A')
+                    })
+                else:
+                    print_info(f"No se pudo actualizar a DELIVERED (Status: {admin_response.status_code})")
+                    print_info("Continuando con la orden PAID para demostración...")
             else:
-                print_info("Cliente no tiene órdenes, saltando pruebas de devoluciones...")
-                print_info("Para una prueba completa, el cliente necesita tener al menos una orden DELIVERED")
+                print_error("Cliente no tiene órdenes PAID o DELIVERED")
+                print_info("Saltando pruebas de devoluciones...")
+                print_info("Para una prueba completa, el cliente necesita tener al menos una orden PAID")
                 return
         else:
             print_error("No se pudo obtener órdenes")
-            return
-        
-        # 4. MARCAR ORDEN COMO ENTREGADA
-        print_header("PASO 4: MARCAR ORDEN COMO ENTREGADA")
-        if not mark_order_as_delivered():
-            print_error("No se pudo marcar la orden como entregada")
             return
         
         # 5. SOLICITAR DEVOLUCIÓN
