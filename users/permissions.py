@@ -80,3 +80,16 @@ class CanViewReports(permissions.BasePermission):
             and request.user.is_authenticated 
             and request.user.role in ['ADMIN', 'MANAGER']
         )
+
+
+class IsDeliveryUser(permissions.BasePermission):
+    """
+    Permiso para usuarios con rol DELIVERY.
+    Delivery puede ver y actualizar sus entregas asignadas.
+    """
+    def has_permission(self, request, view):
+        return (
+            request.user 
+            and request.user.is_authenticated 
+            and request.user.role in ['DELIVERY', 'MANAGER', 'ADMIN']
+        )

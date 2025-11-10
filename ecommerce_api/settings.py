@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',  # Simple JWT para autenticación por tokens
     'products',  # App de productos y categorías
     'shop_orders',  # App de órdenes y carrito de compras
+    'deliveries',  # App de sistema de entregas, garantías y devoluciones
     'reports',  # App de reportes dinámicos
     'predictions',  # App para modelos de ML y predicciones
     'drf_spectacular',  # Documentación automática de API con Swagger

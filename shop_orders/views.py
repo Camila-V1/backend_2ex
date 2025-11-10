@@ -255,15 +255,32 @@ class AdminOrderViewSet(viewsets.ModelViewSet):
         """
         Endpoint especial para cambiar el estado de una orden
         POST /api/admin/orders/{id}/update_status/
-        Body: {"status": "shipped"}
+        Body: {"status": "PAID"} o {"status": "paid"} (case-insensitive)
         """
         order = self.get_object()
         new_status = request.data.get('status')
         
-        valid_statuses = ['pending', 'paid', 'shipped', 'delivered', 'cancelled']
+        if not new_status:
+            return Response(
+                {
+                    'error': 'El campo "status" es requerido',
+                    'received_data': request.data
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Convertir a MAYÚSCULAS para que coincida con el modelo
+        new_status = new_status.upper()
+        
+        # Validar contra las opciones del modelo
+        valid_statuses = [choice[0] for choice in Order.OrderStatus.choices]
         if new_status not in valid_statuses:
             return Response(
-                {'error': f'Estado inválido. Debe ser uno de: {", ".join(valid_statuses)}'},
+                {
+                    'error': f'Estado inválido. Debe ser uno de: {", ".join(valid_statuses)}',
+                    'received_status': new_status,
+                    'valid_statuses': valid_statuses
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
         

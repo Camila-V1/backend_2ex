@@ -1,13 +1,13 @@
 # Script de Testing Completo - API E-Commerce SmartSales365
-# Prueba TODOS los endpoints de la API (53 endpoints en 13 categor�as)
-# Incluye: Auth, Users, Products, Categories, Orders, NLP Cart, Admin, Reports, ML, Reviews, Recommendations, Cache
+# Prueba TODOS los endpoints de la API (80+ endpoints en 14 categorías)
+# Incluye: Auth, Users, Products, Categories, Orders, NLP Cart, Admin, Reports, ML, Reviews, Recommendations, Cache, Deliveries
 # Uso: .\test_api.ps1
 
 $BASE_URL = "http://localhost:8000"
 $testResults = @{ passed = 0; failed = 0; warnings = 0 }
 
 Write-Host "================================================================" -ForegroundColor Blue
-Write-Host "TESTING COMPLETO - SMARTSALES365 API (53 endpoints)" -ForegroundColor Blue
+Write-Host "TESTING COMPLETO - SMARTSALES365 API (80+ endpoints)" -ForegroundColor Blue
 Write-Host "================================================================" -ForegroundColor Blue
 
 # CATEGORIA 1: AUTENTICACION JWT (3 endpoints)
@@ -737,6 +737,331 @@ try {
     $testResults.failed++
 }
 
+# CATEGORIA 14: SISTEMA DE DELIVERIES, GARANTIAS, DEVOLUCIONES Y REPARACIONES (27+ endpoints)
+Write-Host "`n================================================" -ForegroundColor Cyan
+Write-Host "CATEGORIA 14: SISTEMA DE DELIVERIES (27+ endpoints)" -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Cyan
+
+# 14.1 ZONAS DE DELIVERY (6 endpoints)
+Write-Host "`n--- Zonas de Delivery (6 endpoints) ---" -ForegroundColor Magenta
+
+Write-Host "`n[54/80] GET /api/deliveries/zones/" -ForegroundColor Yellow
+try {
+    $zones = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/zones/" -Method Get -Headers $headers
+    Write-Host "OK - Zonas: $($zones.Count)" -ForegroundColor Green
+    if ($zones.Count -gt 0) { $ZONE_ID = $zones[0].id }
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+Write-Host "`n[55/80] POST /api/deliveries/zones/" -ForegroundColor Yellow
+$newZoneBody = @{ name = "Zona Test $(Get-Random)"; description = "Zona de prueba"; is_active = $true } | ConvertTo-Json
+try {
+    $newZone = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/zones/" -Method Post -Headers $headers -Body $newZoneBody -ContentType "application/json"
+    $NEW_ZONE_ID = $newZone.id
+    Write-Host "OK - Zona creada: ID $NEW_ZONE_ID - $($newZone.name)" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+if ($NEW_ZONE_ID) {
+    Write-Host "`n[56/80] GET /api/deliveries/zones/$NEW_ZONE_ID/" -ForegroundColor Yellow
+    try {
+        $zoneDetail = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/zones/$NEW_ZONE_ID/" -Method Get -Headers $headers
+        Write-Host "OK - Zona: $($zoneDetail.name)" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+
+    Write-Host "`n[57/80] PATCH /api/deliveries/zones/$NEW_ZONE_ID/" -ForegroundColor Yellow
+    try {
+        Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/zones/$NEW_ZONE_ID/" -Method Patch -Headers $headers -Body (@{ description = "Actualizada" } | ConvertTo-Json) -ContentType "application/json" | Out-Null
+        Write-Host "OK - Zona actualizada" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+
+    Write-Host "`n[58/80] PUT /api/deliveries/zones/$NEW_ZONE_ID/" -ForegroundColor Yellow
+    try {
+        Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/zones/$NEW_ZONE_ID/" -Method Put -Headers $headers -Body (@{ name = "Zona Updated"; description = "Updated"; is_active = $true } | ConvertTo-Json) -ContentType "application/json" | Out-Null
+        Write-Host "OK - Zona actualizada completamente" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+
+    Write-Host "`n[59/80] DELETE /api/deliveries/zones/$NEW_ZONE_ID/" -ForegroundColor Yellow
+    try {
+        Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/zones/$NEW_ZONE_ID/" -Method Delete -Headers $headers | Out-Null
+        Write-Host "OK - Zona eliminada" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+}
+
+# 14.2 PERFILES DE DELIVERY (4 endpoints)
+Write-Host "`n--- Perfiles de Delivery (4 endpoints) ---" -ForegroundColor Magenta
+
+Write-Host "`n[60/80] GET /api/deliveries/profiles/" -ForegroundColor Yellow
+try {
+    $profiles = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/profiles/" -Method Get -Headers $headers
+    Write-Host "OK - Perfiles: $($profiles.Count)" -ForegroundColor Green
+    if ($profiles.Count -gt 0) { $PROFILE_ID = $profiles[0].id }
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+Write-Host "`n[61/80] GET /api/deliveries/profiles/available/" -ForegroundColor Yellow
+try {
+    $available = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/profiles/available/" -Method Get -Headers $headers
+    Write-Host "OK - Repartidores disponibles: $($available.Count)" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+if ($PROFILE_ID) {
+    Write-Host "`n[62/80] GET /api/deliveries/profiles/$PROFILE_ID/" -ForegroundColor Yellow
+    try {
+        $profileDetail = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/profiles/$PROFILE_ID/" -Method Get -Headers $headers
+        Write-Host "OK - Perfil: $($profileDetail.user.username)" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+
+    Write-Host "`n[63/80] POST /api/deliveries/profiles/$PROFILE_ID/update_status/" -ForegroundColor Yellow
+    try {
+        Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/profiles/$PROFILE_ID/update_status/" -Method Post -Headers $headers -Body (@{ status = "BUSY" } | ConvertTo-Json) -ContentType "application/json" | Out-Null
+        Write-Host "OK - Estado actualizado" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+}
+
+# 14.3 ENTREGAS (6 endpoints)
+Write-Host "`n--- Entregas (6 endpoints) ---" -ForegroundColor Magenta
+
+Write-Host "`n[64/80] GET /api/deliveries/deliveries/" -ForegroundColor Yellow
+try {
+    $deliveries = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/deliveries/" -Method Get -Headers $headers
+    Write-Host "OK - Entregas: $($deliveries.Count)" -ForegroundColor Green
+    if ($deliveries.Count -gt 0) { $DELIVERY_ID = $deliveries[0].id }
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+if ($ORDER_ID -and $ZONE_ID) {
+    Write-Host "`n[65/80] POST /api/deliveries/deliveries/" -ForegroundColor Yellow
+    $deliveryBody = @{ order = $ORDER_ID; zone = $ZONE_ID; delivery_address = "Av. Test 123"; customer_phone = "+51999888777" } | ConvertTo-Json
+    try {
+        $newDelivery = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/deliveries/" -Method Post -Headers $headers -Body $deliveryBody -ContentType "application/json"
+        $NEW_DELIVERY_ID = $newDelivery.id
+        Write-Host "OK - Delivery creado: ID $NEW_DELIVERY_ID" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "WARNING: $($_.Exception.Message)" -ForegroundColor Yellow
+        $testResults.warnings++
+    }
+}
+
+if ($NEW_DELIVERY_ID -and $PROFILE_ID) {
+    Write-Host "`n[66/80] POST /api/deliveries/deliveries/$NEW_DELIVERY_ID/assign_delivery/" -ForegroundColor Yellow
+    try {
+        Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/deliveries/$NEW_DELIVERY_ID/assign_delivery/" -Method Post -Headers $headers -Body (@{ delivery_person_id = $PROFILE_ID } | ConvertTo-Json) -ContentType "application/json" | Out-Null
+        Write-Host "OK - Delivery asignado" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "WARNING: $($_.Exception.Message)" -ForegroundColor Yellow
+        $testResults.warnings++
+    }
+}
+
+Write-Host "`n[67/80] GET /api/deliveries/deliveries/my_deliveries/" -ForegroundColor Yellow
+try {
+    $myDeliveries = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/deliveries/my_deliveries/" -Method Get -Headers $headers
+    Write-Host "OK - Mis entregas: $($myDeliveries.Count)" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "WARNING - Usuario no es delivery" -ForegroundColor Yellow
+    $testResults.warnings++
+}
+
+if ($DELIVERY_ID) {
+    Write-Host "`n[68/80] GET /api/deliveries/deliveries/$DELIVERY_ID/" -ForegroundColor Yellow
+    try {
+        $deliveryDetail = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/deliveries/$DELIVERY_ID/" -Method Get -Headers $headers
+        Write-Host "OK - Delivery: Status=$($deliveryDetail.status)" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+
+    Write-Host "`n[69/80] POST /api/deliveries/deliveries/$DELIVERY_ID/update_delivery_status/" -ForegroundColor Yellow
+    try {
+        Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/deliveries/$DELIVERY_ID/update_delivery_status/" -Method Post -Headers $headers -Body (@{ status = "PICKED_UP" } | ConvertTo-Json) -ContentType "application/json" | Out-Null
+        Write-Host "OK - Estado de delivery actualizado" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "WARNING: $($_.Exception.Message)" -ForegroundColor Yellow
+        $testResults.warnings++
+    }
+}
+
+# 14.4 GARANTIAS (5 endpoints)
+Write-Host "`n--- Garantias (5 endpoints) ---" -ForegroundColor Magenta
+
+Write-Host "`n[70/80] GET /api/deliveries/warranties/" -ForegroundColor Yellow
+try {
+    $warranties = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/warranties/" -Method Get -Headers $headers
+    Write-Host "OK - Garantias: $($warranties.Count)" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+if ($ORDER_ID -and $PRODUCT_ID) {
+    Write-Host "`n[71/80] POST /api/deliveries/warranties/" -ForegroundColor Yellow
+    $warrantyBody = @{ order = $ORDER_ID; product = $PRODUCT_ID; end_date = "2026-01-01"; terms = "1 ano de garantia" } | ConvertTo-Json
+    try {
+        $warranty = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/warranties/" -Method Post -Headers $headers -Body $warrantyBody -ContentType "application/json"
+        $WARRANTY_ID = $warranty.id
+        Write-Host "OK - Garantia creada: ID $WARRANTY_ID" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "WARNING: $($_.Exception.Message)" -ForegroundColor Yellow
+        $testResults.warnings++
+    }
+}
+
+Write-Host "`n[72/80] GET /api/deliveries/warranties/active/" -ForegroundColor Yellow
+try {
+    $activeWarranties = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/warranties/active/" -Method Get -Headers $headers
+    Write-Host "OK - Garantias activas: $($activeWarranties.Count)" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+if ($WARRANTY_ID) {
+    Write-Host "`n[73/80] GET /api/deliveries/warranties/$WARRANTY_ID/" -ForegroundColor Yellow
+    try {
+        $warrantyDetail = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/warranties/$WARRANTY_ID/" -Method Get -Headers $headers
+        Write-Host "OK - Garantia: Status=$($warrantyDetail.status)" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+
+    Write-Host "`n[74/80] POST /api/deliveries/warranties/$WARRANTY_ID/claim/" -ForegroundColor Yellow
+    try {
+        Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/warranties/$WARRANTY_ID/claim/" -Method Post -Headers $headers -Body (@{ notes = "Producto defectuoso" } | ConvertTo-Json) -ContentType "application/json" | Out-Null
+        Write-Host "OK - Garantia reclamada" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "WARNING: $($_.Exception.Message)" -ForegroundColor Yellow
+        $testResults.warnings++
+    }
+}
+
+# 14.5 DEVOLUCIONES (5 endpoints)
+Write-Host "`n--- Devoluciones (5 endpoints) ---" -ForegroundColor Magenta
+
+Write-Host "`n[75/80] GET /api/deliveries/returns/" -ForegroundColor Yellow
+try {
+    $returns = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/returns/" -Method Get -Headers $headers
+    Write-Host "OK - Devoluciones: $($returns.Count)" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+if ($ORDER_ID -and $PRODUCT_ID) {
+    Write-Host "`n[76/80] POST /api/deliveries/returns/" -ForegroundColor Yellow
+    $returnBody = @{ order = $ORDER_ID; product = $PRODUCT_ID; quantity = 1; reason = "DEFECTIVE"; description = "Producto danado" } | ConvertTo-Json
+    try {
+        $return = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/returns/" -Method Post -Headers $headers -Body $returnBody -ContentType "application/json"
+        $RETURN_ID = $return.id
+        Write-Host "OK - Devolucion creada: ID $RETURN_ID" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "WARNING: $($_.Exception.Message)" -ForegroundColor Yellow
+        $testResults.warnings++
+    }
+}
+
+if ($RETURN_ID) {
+    Write-Host "`n[77/80] GET /api/deliveries/returns/$RETURN_ID/" -ForegroundColor Yellow
+    try {
+        $returnDetail = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/returns/$RETURN_ID/" -Method Get -Headers $headers
+        Write-Host "OK - Devolucion: Status=$($returnDetail.status)" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+        $testResults.failed++
+    }
+
+    Write-Host "`n[78/80] POST /api/deliveries/returns/$RETURN_ID/approve/" -ForegroundColor Yellow
+    try {
+        Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/returns/$RETURN_ID/approve/" -Method Post -Headers $headers -Body (@{ refund_amount = 99.99; manager_notes = "Aprobada" } | ConvertTo-Json) -ContentType "application/json" | Out-Null
+        Write-Host "OK - Devolucion aprobada" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "WARNING: $($_.Exception.Message)" -ForegroundColor Yellow
+        $testResults.warnings++
+    }
+}
+
+# 14.6 REPARACIONES (2 endpoints)
+Write-Host "`n--- Reparaciones (2 endpoints) ---" -ForegroundColor Magenta
+
+Write-Host "`n[79/80] GET /api/deliveries/repairs/" -ForegroundColor Yellow
+try {
+    $repairs = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/repairs/" -Method Get -Headers $headers
+    Write-Host "OK - Reparaciones: $($repairs.Count)" -ForegroundColor Green
+    $testResults.passed++
+} catch {
+    Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $testResults.failed++
+}
+
+if ($ORDER_ID -and $PRODUCT_ID) {
+    Write-Host "`n[80/80] POST /api/deliveries/repairs/" -ForegroundColor Yellow
+    $repairBody = @{ order = $ORDER_ID; product = $PRODUCT_ID; description = "Pantalla rota"; estimated_cost = 50.00; is_under_warranty = $false } | ConvertTo-Json
+    try {
+        $repair = Invoke-RestMethod -Uri "$BASE_URL/api/deliveries/repairs/" -Method Post -Headers $headers -Body $repairBody -ContentType "application/json"
+        Write-Host "OK - Reparacion creada: ID $($repair.id)" -ForegroundColor Green
+        $testResults.passed++
+    } catch {
+        Write-Host "WARNING: $($_.Exception.Message)" -ForegroundColor Yellow
+        $testResults.warnings++
+    }
+}
+
 # RESUMEN FINAL
 $total = $testResults.passed + $testResults.failed + $testResults.warnings
 $successRate = [math]::Round(($testResults.passed / $total) * 100, 1)
@@ -752,5 +1077,6 @@ Write-Host "Advertencias: $($testResults.warnings)" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Tasa de exito: $successRate%" -ForegroundColor $(if ($successRate -ge 80) { "Green" } else { "Yellow" })
 Write-Host ""
-Write-Host "Total: 53 endpoints testeados en 13 categorias (incluye rese�as, recomendaciones y cache)" -ForegroundColor Cyan
+Write-Host "Total: 80+ endpoints testeados en 14 categorias" -ForegroundColor Cyan
+Write-Host "Incluye: Deliveries, Garantias, Devoluciones, Reparaciones + Sistema completo" -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Blue

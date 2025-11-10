@@ -8,6 +8,7 @@ class Order(models.Model):
         PENDING = 'PENDING', 'Pendiente'
         PAID = 'PAID', 'Pagado'
         SHIPPED = 'SHIPPED', 'Enviado'
+        DELIVERED = 'DELIVERED', 'Entregado'
         CANCELLED = 'CANCELLED', 'Cancelado'
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')

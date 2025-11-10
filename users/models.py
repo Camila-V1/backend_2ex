@@ -10,6 +10,7 @@ class CustomUser(AbstractUser):
         ADMIN = 'ADMIN', 'Administrador'
         MANAGER = 'MANAGER', 'Gerente'
         CASHIER = 'CAJERO', 'Cajero'
+        DELIVERY = 'DELIVERY', 'Repartidor'
     
     # El superusuario por defecto no tendrá uno de estos roles
     # Por eso permitimos que sea nulo (null=True) y en blanco (blank=True)
