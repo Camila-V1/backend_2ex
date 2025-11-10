@@ -61,7 +61,7 @@ Precio: ${return_obj.product.price}
 
 Razón: {return_obj.get_reason_display()}
 Descripción del cliente:
-{return_obj.description}
+{return_obj.description if return_obj.description else 'No se proporcionó descripción'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

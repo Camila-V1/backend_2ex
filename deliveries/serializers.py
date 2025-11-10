@@ -185,7 +185,7 @@ class ReturnSerializer(serializers.ModelSerializer):
             'id': obj.product.id,
             'name': obj.product.name,
             'price': str(obj.product.price),
-            'image': obj.product.image.url if obj.product.image else None
+            'category': obj.product.category.name if obj.product.category else None
         }
     
     def get_order_details(self, obj):

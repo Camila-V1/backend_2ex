@@ -392,14 +392,20 @@ class ReturnViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         return_obj = serializer.save()
         
+        # ✅ Recargar el objeto con las relaciones para el email
+        return_obj = Return.objects.select_related('product', 'order', 'user').get(pk=return_obj.pk)
+        
         # ✅ Enviar email a managers
         try:
             send_new_return_notification_to_managers(return_obj)
         except Exception as e:
             print(f"⚠️  Error enviando email a managers: {str(e)}")
         
+        # Crear serializer con el objeto recargado
+        response_serializer = self.get_serializer(return_obj)
+        
         return Response({
-            **serializer.data,
+            **response_serializer.data,
             'message': 'Solicitud de devolución creada. Un manager la revisará pronto.'
         }, status=status.HTTP_201_CREATED)
     
