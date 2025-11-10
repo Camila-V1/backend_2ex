@@ -181,6 +181,8 @@ class ReturnSerializer(serializers.ModelSerializer):
     
     def get_product_details(self, obj):
         """Información del producto"""
+        if not obj.product:
+            return None
         return {
             'id': obj.product.id,
             'name': obj.product.name,
@@ -190,6 +192,8 @@ class ReturnSerializer(serializers.ModelSerializer):
     
     def get_order_details(self, obj):
         """Información de la orden"""
+        if not obj.order:
+            return None
         return {
             'id': obj.order.id,
             'order_number': f"#{obj.order.id}",
@@ -200,6 +204,8 @@ class ReturnSerializer(serializers.ModelSerializer):
     
     def get_customer_details(self, obj):
         """Información del cliente"""
+        if not obj.user:
+            return None
         return {
             'id': obj.user.id,
             'username': obj.user.username,
