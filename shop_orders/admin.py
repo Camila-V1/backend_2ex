@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Order, OrderItem
+from .payment_models import Payment, Refund
 
 
 class OrderItemInline(admin.TabularInline):
@@ -19,3 +20,7 @@ class OrderAdmin(admin.ModelAdmin):
 class OrderItemAdmin(admin.ModelAdmin):
     list_display = ('id', 'order', 'product', 'quantity', 'price')
     list_filter = ('order__status',)
+
+
+# Importar y registrar Payment y Refund admin
+from .payment_admin import PaymentAdmin, RefundAdmin

@@ -495,27 +495,39 @@ class ReturnViewSet(viewsets.ModelViewSet):
         return_obj.save()
         
         # ✅ Procesar reembolso automáticamente
-        try:
-            self._process_refund(return_obj)
-        except Exception as e:
-            print(f"⚠️  Error procesando reembolso: {str(e)}")
+        refund_success = False
+        refund_message = ""
+        refund_details = {}
         
-        # Marcar como completado inmediatamente después de aprobar
-        return_obj.status = Return.ReturnStatus.COMPLETED
-        return_obj.processed_at = timezone.now()
-        return_obj.completed_at = timezone.now()
-        return_obj.save()
-        
-        # ✅ Enviar email al cliente notificando aprobación
         try:
-            send_return_approved_notification(return_obj)
+            refund_success, refund_message, refund_details = self._process_refund(return_obj)
         except Exception as e:
-            print(f"⚠️  Error enviando email al cliente: {str(e)}")
+            refund_message = f"Error procesando reembolso: {str(e)}"
+            print(f"⚠️  {refund_message}")
+        
+        # Marcar como completado si el reembolso fue exitoso o es método manual (BANK)
+        if refund_success or return_obj.refund_method == Return.RefundMethod.BANK:
+            return_obj.status = Return.ReturnStatus.COMPLETED
+            return_obj.processed_at = timezone.now()
+            return_obj.completed_at = timezone.now()
+            return_obj.save()
+            
+            # ✅ Enviar email al cliente notificando aprobación
+            try:
+                send_return_approved_notification(return_obj)
+            except Exception as e:
+                print(f"⚠️  Error enviando email al cliente: {str(e)}")
+        else:
+            # Si el reembolso falló, mantener en APPROVED pero no COMPLETED
+            print(f"⚠️  Devolución aprobada pero reembolso falló: {refund_message}")
         
         serializer = self.get_serializer(return_obj)
         return Response({
             **serializer.data,
-            'message': '✅ Devolución aprobada. Reembolso procesado automáticamente.'
+            'message': '✅ Devolución aprobada.' if refund_success else f'⚠️  Devolución aprobada pero: {refund_message}',
+            'refund_status': 'success' if refund_success else 'failed',
+            'refund_message': refund_message,
+            'refund_details': refund_details
         })
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminOrManager])
@@ -566,8 +578,12 @@ class ReturnViewSet(viewsets.ModelViewSet):
     def _process_refund(self, return_obj):
         """
         Procesar reembolso automáticamente según el método seleccionado.
+        
+        Returns:
+            tuple: (success: bool, message: str, details: dict)
         """
         from users.wallet_models import Wallet, WalletTransaction
+        from shop_orders.stripe_refund_service import process_return_refund_to_stripe
         
         if return_obj.refund_method == Return.RefundMethod.WALLET:
             # ✅ Agregar a billetera virtual del usuario
@@ -587,15 +603,49 @@ class ReturnViewSet(viewsets.ModelViewSet):
             print(f"✅ Reembolso de ${return_obj.refund_amount} agregado a billetera de {return_obj.user.username}")
             print(f"   Nuevo saldo: ${wallet.balance}")
             
+            return (
+                True,
+                f"Reembolso de ${return_obj.refund_amount} agregado a la billetera virtual.",
+                {
+                    'method': 'WALLET',
+                    'wallet_id': wallet.id,
+                    'transaction_id': transaction.id,
+                    'new_balance': str(wallet.balance)
+                }
+            )
+            
         elif return_obj.refund_method == Return.RefundMethod.ORIGINAL:
-            # TODO: Reembolsar al método original (Stripe, etc.)
-            print(f"⚠️  Reembolso a método original pendiente (Stripe): ${return_obj.refund_amount}")
-            # Aquí iría la integración con Stripe para reembolsos
+            # ✅ Reembolsar al método original vía Stripe
+            print(f"🔄 Procesando reembolso a método original (Stripe): ${return_obj.refund_amount}")
+            
+            success, message, refund_data = process_return_refund_to_stripe(
+                return_obj=return_obj,
+                manager_user=self.request.user
+            )
+            
+            if success:
+                print(f"✅ {message}")
+            else:
+                print(f"❌ Error en Stripe: {message}")
+            
+            return (success, message, refund_data or {})
             
         elif return_obj.refund_method == Return.RefundMethod.BANK:
-            # TODO: Registrar para transferencia bancaria manual
+            # ⚠️ Transferencia bancaria manual
             print(f"⚠️  Transferencia bancaria pendiente: ${return_obj.refund_amount}")
-            # Aquí se puede crear un registro para que el admin procese manualmente
+            
+            # Crear registro para procesamiento manual
+            # TODO: Aquí se puede enviar notificación al equipo de finanzas
+            
+            return (
+                True,
+                f"Transferencia bancaria de ${return_obj.refund_amount} registrada para procesamiento manual. "
+                "El equipo de finanzas procesará el pago en 3-5 días hábiles.",
+                {
+                    'method': 'BANK',
+                    'status': 'PENDING_MANUAL_PROCESSING'
+                }
+            )
 
 
 class RepairViewSet(viewsets.ModelViewSet):
