@@ -391,18 +391,22 @@ def get_wallet_transactions():
     print_info("Consultando transacciones de billetera...")
     
     response = requests.get(
-        f"{BASE_URL}/users/wallets/my_transactions/",
+        f"{BASE_URL}/users/wallet-transactions/my_transactions/",
         headers=get_auth_header('cliente')
     )
     
     if response.status_code == 200:
         data = response.json()
-        print_success(f"Transacciones obtenidas - Total: {len(data)}")
-        print_data("Transacciones", data)
-        return data
+        results = data.get('results', data) if isinstance(data, dict) else data
+        print_success(f"Transacciones obtenidas - Total: {len(results)}")
+        print_data("Transacciones", results[:3] if len(results) > 3 else results)  # Mostrar solo las primeras 3
+        return results
     else:
-        print_error("Error al obtener transacciones")
-        print_data("Error", response.json())
+        print_error(f"Error al obtener transacciones (Status: {response.status_code})")
+        try:
+            print_data("Error", response.json())
+        except:
+            print(f"⚠️  Endpoint puede no existir: {response.text[:200]}")
         return None
 
 def get_wallet_statistics():
@@ -410,7 +414,7 @@ def get_wallet_statistics():
     print_info("Consultando estadísticas de billetera...")
     
     response = requests.get(
-        f"{BASE_URL}/users/wallets/statistics/",
+        f"{BASE_URL}/users/wallet-transactions/statistics/",
         headers=get_auth_header('cliente')
     )
     
@@ -420,8 +424,11 @@ def get_wallet_statistics():
         print_data("Estadísticas", data)
         return data
     else:
-        print_error("Error al obtener estadísticas")
-        print_data("Error", response.json())
+        print_error(f"Error al obtener estadísticas (Status: {response.status_code})")
+        try:
+            print_data("Error", response.json())
+        except:
+            print(f"⚠️  Endpoint puede no existir: {response.text[:200]}")
         return None
 
 def get_my_returns():
@@ -459,8 +466,11 @@ def manager_list_all_returns():
         print_data("Devoluciones del sistema", results)
         return results
     else:
-        print_error("Error al obtener devoluciones")
-        print_data("Error", response.json())
+        print_error(f"Error al obtener devoluciones (Status: {response.status_code})")
+        try:
+            print_data("Error", response.json())
+        except:
+            print(f"Response text: {response.text[:200]}")
         return None
 
 def test_reject_return_flow():
