@@ -91,14 +91,23 @@ class Warranty(models.Model):
 
 
 class Return(models.Model):
-    """Devoluciones de productos"""
+    """
+    Sistema simplificado de devoluciones.
+    
+    Flujo:
+    1. Cliente solicita devolución desde su historial → REQUESTED
+    2. Manager envía a evaluación física → IN_EVALUATION
+    3. Tercero evalúa y manager actualiza → APPROVED o REJECTED
+    4. Si APPROVED → Se procesa reembolso automático → COMPLETED
+    5. Cliente recibe correo con el resultado
+    """
     
     class ReturnStatus(models.TextChoices):
-        REQUESTED = 'REQUESTED', 'Solicitada'
-        APPROVED = 'APPROVED', 'Aprobada'
+        REQUESTED = 'REQUESTED', 'Solicitada por cliente'
+        IN_EVALUATION = 'IN_EVALUATION', 'En evaluación física'
+        APPROVED = 'APPROVED', 'Aprobada - Procesando reembolso'
         REJECTED = 'REJECTED', 'Rechazada'
-        IN_TRANSIT = 'IN_TRANSIT', 'En tránsito'
-        COMPLETED = 'COMPLETED', 'Completada'
+        COMPLETED = 'COMPLETED', 'Completada - Reembolso realizado'
     
     class ReturnReason(models.TextChoices):
         DEFECTIVE = 'DEFECTIVE', 'Producto defectuoso'
@@ -107,20 +116,55 @@ class Return(models.Model):
         CHANGED_MIND = 'CHANGED_MIND', 'Cambió de opinión'
         OTHER = 'OTHER', 'Otro'
     
+    class RefundMethod(models.TextChoices):
+        WALLET = 'WALLET', 'Billetera virtual'
+        ORIGINAL = 'ORIGINAL', 'Método de pago original'
+        BANK = 'BANK', 'Transferencia bancaria'
+    
+    # Información básica de la devolución
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='returns')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, help_text="Cliente que solicita la devolución")
     quantity = models.PositiveIntegerField(default=1)
     reason = models.CharField(max_length=20, choices=ReturnReason.choices)
-    description = models.TextField()
+    description = models.TextField(help_text="Descripción del cliente del problema")
+    
+    # Estado y seguimiento
     status = models.CharField(
         max_length=20,
         choices=ReturnStatus.choices,
         default=ReturnStatus.REQUESTED
     )
-    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Evaluación del manager/tercero
+    evaluation_notes = models.TextField(
+        blank=True, 
+        help_text="Notas de la evaluación física realizada por tercero"
+    )
+    manager_notes = models.TextField(
+        blank=True,
+        help_text="Notas del manager sobre la decisión"
+    )
+    
+    # Reembolso
+    refund_amount = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0,
+        help_text="Monto a reembolsar (calculado automáticamente)"
+    )
+    refund_method = models.CharField(
+        max_length=20,
+        choices=RefundMethod.choices,
+        default=RefundMethod.WALLET,
+        help_text="Método de reembolso"
+    )
+    
+    # Timestamps
     requested_at = models.DateTimeField(auto_now_add=True)
-    processed_at = models.DateTimeField(null=True, blank=True)
-    manager_notes = models.TextField(blank=True)
+    evaluated_at = models.DateTimeField(null=True, blank=True, help_text="Fecha de evaluación")
+    processed_at = models.DateTimeField(null=True, blank=True, help_text="Fecha de procesamiento del reembolso")
+    completed_at = models.DateTimeField(null=True, blank=True, help_text="Fecha de completado")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

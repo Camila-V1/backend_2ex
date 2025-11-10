@@ -332,90 +332,244 @@ class WarrantyViewSet(viewsets.ModelViewSet):
 
 
 class ReturnViewSet(viewsets.ModelViewSet):
-    """ViewSet para gestionar devoluciones"""
+    """ViewSet simplificado para gestionar devoluciones"""
     serializer_class = ReturnSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'reason', 'order', 'product']
     search_fields = ['order__id', 'product__name', 'description']
-    ordering_fields = ['requested_at', 'processed_at', 'created_at']
+    ordering_fields = ['requested_at', 'evaluated_at', 'completed_at', 'created_at']
     ordering = ['-created_at']
     
     def get_queryset(self):
-        """Optimizar queryset con select_related"""
-        return Return.objects.select_related(
+        """
+        Filtrar devoluciones según el rol:
+        - Clientes: solo sus propias devoluciones
+        - Managers/Admins: todas las devoluciones
+        """
+        queryset = Return.objects.select_related(
             'order',
             'order__user',
             'product',
-            'product__category'
+            'product__category',
+            'user'
         ).all()
+        
+        # Si es cliente, solo ver sus propias devoluciones
+        if self.request.user.role not in ['MANAGER', 'ADMIN']:
+            queryset = queryset.filter(user=self.request.user)
+        
+        return queryset
     
     def get_permissions(self):
-        """Clientes pueden crear, managers pueden aprobar/rechazar"""
+        """
+        Permisos por acción:
+        - create: Cualquier usuario autenticado
+        - my_returns: Cualquier usuario autenticado
+        - send_to_evaluation, approve, reject: Solo managers/admins
+        - list, retrieve: Según rol (filtrado en get_queryset)
+        """
         if self.action == 'create':
             permission_classes = [IsAuthenticated]
-        elif self.action in ['approve', 'reject', 'update', 'partial_update', 'destroy']:
+        elif self.action == 'my_returns':
+            permission_classes = [IsAuthenticated]
+        elif self.action in ['send_to_evaluation', 'approve', 'reject', 'update', 'partial_update', 'destroy']:
             permission_classes = [IsAuthenticated, IsAdminOrManager]
         else:
             permission_classes = [IsAuthenticated]
         
         return [permission() for permission in permission_classes]
     
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminOrManager])
-    def approve(self, request, pk=None):
-        """Aprobar una devolución"""
-        return_obj = self.get_object()
+    def create(self, request, *args, **kwargs):
+        """Crear una solicitud de devolución"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
         
-        if return_obj.status != Return.ReturnStatus.REQUESTED:
-            return Response(
-                {'error': 'Solo se pueden aprobar devoluciones en estado REQUESTED'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # TODO: Enviar email al manager
+        # from django.core.mail import send_mail
+        # send_mail(...)
         
-        refund_amount = request.data.get('refund_amount')
-        manager_notes = request.data.get('manager_notes', '')
+        return Response({
+            **serializer.data,
+            'message': 'Solicitud de devolución creada. Un manager la revisará pronto.'
+        }, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['get'])
+    def my_returns(self, request):
+        """Obtener las devoluciones del usuario autenticado"""
+        queryset = self.get_queryset().filter(user=request.user)
         
-        if refund_amount is None:
-            return Response(
-                {'error': 'Debe especificar el monto de reembolso'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Filtrar por estado si se proporciona
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
         
-        return_obj.status = Return.ReturnStatus.APPROVED
-        return_obj.refund_amount = refund_amount
-        return_obj.manager_notes = manager_notes
-        return_obj.processed_at = timezone.now()
-        return_obj.save()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         
-        serializer = self.get_serializer(return_obj)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminOrManager])
-    def reject(self, request, pk=None):
-        """Rechazar una devolución"""
+    def send_to_evaluation(self, request, pk=None):
+        """
+        Manager envía la devolución a evaluación física con un tercero
+        Estado: REQUESTED → IN_EVALUATION
+        """
         return_obj = self.get_object()
         
         if return_obj.status != Return.ReturnStatus.REQUESTED:
             return Response(
-                {'error': 'Solo se pueden rechazar devoluciones en estado REQUESTED'},
+                {'error': f'Solo se pueden evaluar devoluciones en estado REQUESTED. Estado actual: {return_obj.get_status_display()}'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        manager_notes = request.data.get('manager_notes', '')
+        notes = request.data.get('notes', '')
         
-        if not manager_notes:
-            return Response(
-                {'error': 'Debe proporcionar una razón para el rechazo'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        return_obj.status = Return.ReturnStatus.REJECTED
-        return_obj.manager_notes = manager_notes
-        return_obj.processed_at = timezone.now()
+        # Cambiar estado a evaluación
+        return_obj.status = Return.ReturnStatus.IN_EVALUATION
+        if notes:
+            return_obj.manager_notes = notes
         return_obj.save()
         
         serializer = self.get_serializer(return_obj)
-        return Response(serializer.data)
+        return Response({
+            **serializer.data,
+            'message': 'Devolución enviada a evaluación física'
+        })
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminOrManager])
+    def approve(self, request, pk=None):
+        """
+        Manager aprueba la devolución después de recibir evaluación física
+        Estado: IN_EVALUATION → APPROVED → COMPLETED (automático con reembolso)
+        """
+        return_obj = self.get_object()
+        
+        # Permitir aprobar desde REQUESTED o IN_EVALUATION
+        if return_obj.status not in [Return.ReturnStatus.REQUESTED, Return.ReturnStatus.IN_EVALUATION]:
+            return Response(
+                {'error': f'Solo se pueden aprobar devoluciones en estado REQUESTED o IN_EVALUATION. Estado actual: {return_obj.get_status_display()}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        evaluation_notes = request.data.get('evaluation_notes', '')
+        refund_amount = request.data.get('refund_amount')
+        refund_method = request.data.get('refund_method', 'WALLET')
+        
+        # Validar monto de reembolso
+        if refund_amount is None:
+            # Calcular automáticamente basado en el precio del producto
+            refund_amount = return_obj.product.price * return_obj.quantity
+        
+        # Validar método de reembolso
+        if refund_method not in dict(Return.RefundMethod.choices):
+            return Response(
+                {'error': f'Método de reembolso inválido: {refund_method}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Actualizar devolución
+        return_obj.status = Return.ReturnStatus.APPROVED
+        return_obj.evaluation_notes = evaluation_notes
+        return_obj.refund_amount = refund_amount
+        return_obj.refund_method = refund_method
+        return_obj.evaluated_at = timezone.now()
+        return_obj.save()
+        
+        # TODO: Procesar reembolso automáticamente
+        # self._process_refund(return_obj)
+        
+        # Marcar como completado inmediatamente después de aprobar
+        return_obj.status = Return.ReturnStatus.COMPLETED
+        return_obj.processed_at = timezone.now()
+        return_obj.completed_at = timezone.now()
+        return_obj.save()
+        
+        # TODO: Enviar email al cliente
+        # self._send_approval_email(return_obj)
+        
+        serializer = self.get_serializer(return_obj)
+        return Response({
+            **serializer.data,
+            'message': '✅ Devolución aprobada. Reembolso procesado automáticamente.'
+        })
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsAdminOrManager])
+    def reject(self, request, pk=None):
+        """
+        Manager rechaza la devolución después de recibir evaluación física
+        Estado: IN_EVALUATION → REJECTED
+        """
+        return_obj = self.get_object()
+        
+        # Permitir rechazar desde REQUESTED o IN_EVALUATION
+        if return_obj.status not in [Return.ReturnStatus.REQUESTED, Return.ReturnStatus.IN_EVALUATION]:
+            return Response(
+                {'error': f'Solo se pueden rechazar devoluciones en estado REQUESTED o IN_EVALUATION. Estado actual: {return_obj.get_status_display()}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        evaluation_notes = request.data.get('evaluation_notes', '')
+        manager_notes = request.data.get('manager_notes', '')
+        
+        if not evaluation_notes and not manager_notes:
+            return Response(
+                {'error': 'Debe proporcionar una razón para el rechazo (evaluation_notes o manager_notes)'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Actualizar devolución
+        return_obj.status = Return.ReturnStatus.REJECTED
+        if evaluation_notes:
+            return_obj.evaluation_notes = evaluation_notes
+        if manager_notes:
+            return_obj.manager_notes = manager_notes
+        return_obj.evaluated_at = timezone.now()
+        return_obj.save()
+        
+        # TODO: Enviar email al cliente con el motivo del rechazo
+        # self._send_rejection_email(return_obj)
+        
+        serializer = self.get_serializer(return_obj)
+        return Response({
+            **serializer.data,
+            'message': '❌ Devolución rechazada. Se ha notificado al cliente.'
+        })
+    
+    def _process_refund(self, return_obj):
+        """
+        Procesar reembolso automáticamente según el método seleccionado
+        TODO: Implementar lógica de reembolso
+        """
+        if return_obj.refund_method == Return.RefundMethod.WALLET:
+            # Agregar a billetera virtual del usuario
+            # user.wallet_balance += return_obj.refund_amount
+            # user.save()
+            pass
+        elif return_obj.refund_method == Return.RefundMethod.ORIGINAL:
+            # Reembolsar al método original (Stripe, etc.)
+            pass
+        elif return_obj.refund_method == Return.RefundMethod.BANK:
+            # Registrar para transferencia bancaria manual
+            pass
+    
+    def _send_approval_email(self, return_obj):
+        """
+        Enviar email al cliente notificando aprobación
+        TODO: Implementar envío de email
+        """
+        pass
+    
+    def _send_rejection_email(self, return_obj):
+        """
+        Enviar email al cliente notificando rechazo con motivo
+        TODO: Implementar envío de email
+        """
+        pass
 
 
 class RepairViewSet(viewsets.ModelViewSet):

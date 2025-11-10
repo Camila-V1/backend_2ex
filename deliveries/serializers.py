@@ -137,23 +137,75 @@ class WarrantySerializer(serializers.ModelSerializer):
 
 
 class ReturnSerializer(serializers.ModelSerializer):
-    """Serializer para devoluciones"""
-    product_name = serializers.CharField(source='product.name', read_only=True)
-    order_id = serializers.IntegerField(source='order.id', read_only=True)
-    customer_name = serializers.CharField(source='order.user.get_full_name', read_only=True)
+    """Serializer simplificado para devoluciones"""
+    # Campos read-only para mostrar información relacionada
+    product_details = serializers.SerializerMethodField()
+    order_details = serializers.SerializerMethodField()
+    customer_details = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     reason_display = serializers.CharField(source='get_reason_display', read_only=True)
+    refund_method_display = serializers.CharField(source='get_refund_method_display', read_only=True)
+    
+    # Campos write-only para crear devoluciones
+    order_id = serializers.IntegerField(write_only=True, required=True)
+    product_id = serializers.IntegerField(write_only=True, required=True)
     
     class Meta:
         model = Return
         fields = [
-            'id', 'order', 'order_id', 'product', 'product_name',
-            'customer_name', 'quantity', 'reason', 'reason_display',
-            'status', 'status_display', 'description', 'refund_amount',
-            'manager_notes', 'requested_at', 'processed_at',
+            # IDs para crear/editar
+            'id', 'order_id', 'product_id',
+            
+            # Información básica
+            'order', 'product', 'user', 'quantity', 'reason', 'reason_display', 
+            'description', 'status', 'status_display',
+            
+            # Detalles relacionados (read-only)
+            'product_details', 'order_details', 'customer_details',
+            
+            # Evaluación y notas
+            'evaluation_notes', 'manager_notes',
+            
+            # Reembolso
+            'refund_amount', 'refund_method', 'refund_method_display',
+            
+            # Timestamps
+            'requested_at', 'evaluated_at', 'processed_at', 'completed_at',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'requested_at', 'processed_at']
+        read_only_fields = [
+            'id', 'order', 'product', 'user', 
+            'requested_at', 'evaluated_at', 'processed_at', 'completed_at',
+            'created_at', 'updated_at'
+        ]
+    
+    def get_product_details(self, obj):
+        """Información del producto"""
+        return {
+            'id': obj.product.id,
+            'name': obj.product.name,
+            'price': str(obj.product.price),
+            'image': obj.product.image.url if obj.product.image else None
+        }
+    
+    def get_order_details(self, obj):
+        """Información de la orden"""
+        return {
+            'id': obj.order.id,
+            'order_number': f"#{obj.order.id}",
+            'order_date': obj.order.created_at.isoformat(),
+            'total_price': str(obj.order.total_price),
+            'status': obj.order.status
+        }
+    
+    def get_customer_details(self, obj):
+        """Información del cliente"""
+        return {
+            'id': obj.user.id,
+            'username': obj.user.username,
+            'email': obj.user.email,
+            'full_name': obj.user.get_full_name()
+        }
     
     def validate_quantity(self, value):
         """Validar que la cantidad sea positiva"""
@@ -166,6 +218,71 @@ class ReturnSerializer(serializers.ModelSerializer):
         if value and value < 0:
             raise serializers.ValidationError("El monto de reembolso no puede ser negativo")
         return value
+    
+    def validate(self, data):
+        """Validaciones adicionales"""
+        # Si se está creando una nueva devolución
+        if not self.instance:
+            order_id = data.get('order_id')
+            product_id = data.get('product_id')
+            quantity = data.get('quantity', 1)
+            
+            # Validar que la orden exista
+            from shop_orders.models import Order
+            try:
+                order = Order.objects.get(id=order_id)
+                data['order'] = order
+            except Order.DoesNotExist:
+                raise serializers.ValidationError({"order_id": "Orden no encontrada"})
+            
+            # Validar que el producto exista en la orden
+            from products.models import Product
+            try:
+                product = Product.objects.get(id=product_id)
+                data['product'] = product
+            except Product.DoesNotExist:
+                raise serializers.ValidationError({"product_id": "Producto no encontrado"})
+            
+            # Verificar que el producto esté en la orden
+            order_item = order.items.filter(product=product).first()
+            if not order_item:
+                raise serializers.ValidationError({
+                    "product_id": "Este producto no está en la orden especificada"
+                })
+            
+            # Validar cantidad
+            if quantity > order_item.quantity:
+                raise serializers.ValidationError({
+                    "quantity": f"Solo puedes devolver hasta {order_item.quantity} unidades"
+                })
+            
+            # Validar que la orden esté entregada
+            if order.status != 'DELIVERED':
+                raise serializers.ValidationError({
+                    "order_id": "Solo puedes devolver productos de órdenes entregadas"
+                })
+            
+            # Establecer el usuario automáticamente
+            request = self.context.get('request')
+            if request and hasattr(request, 'user'):
+                data['user'] = request.user
+        
+        return data
+    
+    def create(self, validated_data):
+        """Crear devolución con valores iniciales"""
+        # Remover campos write-only que ya fueron procesados
+        validated_data.pop('order_id', None)
+        validated_data.pop('product_id', None)
+        
+        # Establecer estado inicial
+        validated_data['status'] = Return.ReturnStatus.REQUESTED
+        
+        # Crear la devolución
+        from django.utils import timezone
+        validated_data['requested_at'] = timezone.now()
+        
+        return super().create(validated_data)
 
 
 class RepairSerializer(serializers.ModelSerializer):
