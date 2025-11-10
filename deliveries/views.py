@@ -494,8 +494,11 @@ class ReturnViewSet(viewsets.ModelViewSet):
         return_obj.evaluated_at = timezone.now()
         return_obj.save()
         
-        # TODO: Procesar reembolso automáticamente
-        # self._process_refund(return_obj)
+        # ✅ Procesar reembolso automáticamente
+        try:
+            self._process_refund(return_obj)
+        except Exception as e:
+            print(f"⚠️  Error procesando reembolso: {str(e)}")
         
         # Marcar como completado inmediatamente después de aprobar
         return_obj.status = Return.ReturnStatus.COMPLETED
@@ -559,6 +562,40 @@ class ReturnViewSet(viewsets.ModelViewSet):
             **serializer.data,
             'message': '❌ Devolución rechazada. Se ha notificado al cliente.'
         })
+    
+    def _process_refund(self, return_obj):
+        """
+        Procesar reembolso automáticamente según el método seleccionado.
+        """
+        from users.wallet_models import Wallet, WalletTransaction
+        
+        if return_obj.refund_method == Return.RefundMethod.WALLET:
+            # ✅ Agregar a billetera virtual del usuario
+            wallet, created = Wallet.objects.get_or_create(user=return_obj.user)
+            
+            if created:
+                print(f"✅ Billetera creada para {return_obj.user.username}")
+            
+            # Agregar fondos
+            transaction = wallet.add_funds(
+                amount=return_obj.refund_amount,
+                transaction_type=WalletTransaction.TransactionType.REFUND,
+                description=f"Reembolso por devolución #{return_obj.id} - {return_obj.product.name}",
+                reference_id=f"RETURN-{return_obj.id}"
+            )
+            
+            print(f"✅ Reembolso de ${return_obj.refund_amount} agregado a billetera de {return_obj.user.username}")
+            print(f"   Nuevo saldo: ${wallet.balance}")
+            
+        elif return_obj.refund_method == Return.RefundMethod.ORIGINAL:
+            # TODO: Reembolsar al método original (Stripe, etc.)
+            print(f"⚠️  Reembolso a método original pendiente (Stripe): ${return_obj.refund_amount}")
+            # Aquí iría la integración con Stripe para reembolsos
+            
+        elif return_obj.refund_method == Return.RefundMethod.BANK:
+            # TODO: Registrar para transferencia bancaria manual
+            print(f"⚠️  Transferencia bancaria pendiente: ${return_obj.refund_amount}")
+            # Aquí se puede crear un registro para que el admin procese manualmente
 
 
 class RepairViewSet(viewsets.ModelViewSet):

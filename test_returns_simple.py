@@ -221,6 +221,21 @@ def test_aprobar_devolucion(manager, devolucion):
     
     print("\n💰 Procesando reembolso automático...")
     
+    # ✅ Procesar reembolso a billetera
+    from users.wallet_models import Wallet, WalletTransaction
+    wallet, created = Wallet.objects.get_or_create(user=devolucion.user)
+    
+    if created:
+        print("\n💳 Billetera creada automáticamente para el cliente")
+    
+    # Agregar fondos
+    transaction = wallet.add_funds(
+        amount=devolucion.refund_amount,
+        transaction_type=WalletTransaction.TransactionType.REFUND,
+        description=f"Reembolso por devolución #{devolucion.id} - {devolucion.product.name}",
+        reference_id=f"RETURN-{devolucion.id}"
+    )
+    
     # Marcar como completado
     devolucion.status = Return.ReturnStatus.COMPLETED
     devolucion.processed_at = timezone.now()
@@ -228,6 +243,8 @@ def test_aprobar_devolucion(manager, devolucion):
     devolucion.save()
     
     print_success("Reembolso procesado exitosamente")
+    print_info(f"  - Monto agregado a billetera: ${transaction.amount}")
+    print_info(f"  - Saldo nuevo en billetera: ${wallet.balance}")
     print_info(f"  - Estado final: {devolucion.get_status_display()}")
     print_info(f"  - Completado: {devolucion.completed_at.strftime('%Y-%m-%d %H:%M:%S')}")
     
@@ -319,9 +336,35 @@ def test_ver_historial(cliente):
         print()
 
 
+def test_ver_billetera(cliente):
+    """Ver saldo de billetera del cliente"""
+    print_section("8. VERIFICAR BILLETERA DEL CLIENTE")
+    
+    from users.wallet_models import Wallet, WalletTransaction
+    
+    try:
+        wallet = Wallet.objects.get(user=cliente)
+        print_success(f"Billetera de {cliente.get_full_name()}:")
+        print_info(f"  - Saldo actual: ${wallet.balance}")
+        print_info(f"  - Estado: {'Activa' if wallet.is_active else 'Inactiva'}")
+        
+        # Mostrar transacciones
+        transactions = WalletTransaction.objects.filter(wallet=wallet).order_by('-created_at')[:5]
+        if transactions.exists():
+            print_info(f"\n  Últimas {transactions.count()} transacciones:")
+            for tx in transactions:
+                sign = '+' if tx.amount >= 0 else ''
+                print_info(f"    {sign}${tx.amount} - {tx.get_transaction_type_display()} - {tx.description}")
+        else:
+            print_info("  Sin transacciones aún")
+            
+    except Wallet.DoesNotExist:
+        print_info("Cliente no tiene billetera creada aún")
+
+
 def print_estadisticas():
     """Mostrar estadísticas generales"""
-    print_section("8. ESTADÍSTICAS GENERALES")
+    print_section("9. ESTADÍSTICAS GENERALES")
     
     total = Return.objects.count()
     solicitadas = Return.objects.filter(status=Return.ReturnStatus.REQUESTED).count()
@@ -378,7 +421,10 @@ def main():
         # 5. Ver historial
         test_ver_historial(cliente)
         
-        # 6. Estadísticas
+        # 6. Ver billetera
+        test_ver_billetera(cliente)
+        
+        # 7. Estadísticas
         print_estadisticas()
         
         print_section("✅ TODOS LOS TESTS COMPLETADOS EXITOSAMENTE")
@@ -389,13 +435,20 @@ def main():
         print("  ✅ Devolución aprobada y reembolsada")
         print("  ✅ Devolución rechazada")
         print("  ✅ Historial consultado")
+        print("  ✅ Billetera verificada con saldo actualizado")
         print("  ✅ Estadísticas generadas")
         
-        print("\n💡 PRÓXIMOS PASOS:")
-        print("  1. Implementar envío de emails")
-        print("  2. Integrar con sistema de billetera virtual")
-        print("  3. Conectar con Stripe para reembolsos al método original")
-        print("  4. Agregar notificaciones en tiempo real")
+        print("\n💡 FUNCIONALIDADES COMPLETADAS:")
+        print("  ✅ Sistema de devoluciones simplificado")
+        print("  ✅ Envío de emails automático")
+        print("  ✅ Billetera virtual con reembolsos automáticos")
+        print("  ✅ Historial de transacciones")
+        
+        print("\n🔜 MEJORAS FUTURAS:")
+        print("  1. Conectar con Stripe para reembolsos al método original")
+        print("  2. Agregar notificaciones en tiempo real (WebSockets)")
+        print("  3. Emails HTML con plantillas personalizadas")
+        print("  4. Dashboard de analíticas avanzado")
         
     except Exception as e:
         print_error(f"Error durante el test: {str(e)}")

@@ -20,3 +20,7 @@ class CustomUser(AbstractUser):
         null=True, 
         blank=True
     )
+
+
+# Importar modelos de billetera
+from .wallet_models import Wallet, WalletTransaction
