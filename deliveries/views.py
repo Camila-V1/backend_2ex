@@ -14,6 +14,12 @@ from .serializers import (
 )
 from users.permissions import IsAdminUser, IsManagerUser, IsDeliveryUser, IsAdminOrManager
 from shop_orders.models import Order
+from .email_utils import (
+    send_new_return_notification_to_managers,
+    send_return_approved_notification,
+    send_return_rejected_notification,
+    send_return_evaluation_started_notification
+)
 
 
 class DeliveryZoneViewSet(viewsets.ModelViewSet):
@@ -384,11 +390,13 @@ class ReturnViewSet(viewsets.ModelViewSet):
         """Crear una solicitud de devolución"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        return_obj = serializer.save()
         
-        # TODO: Enviar email al manager
-        # from django.core.mail import send_mail
-        # send_mail(...)
+        # ✅ Enviar email a managers
+        try:
+            send_new_return_notification_to_managers(return_obj)
+        except Exception as e:
+            print(f"⚠️  Error enviando email a managers: {str(e)}")
         
         return Response({
             **serializer.data,
@@ -434,6 +442,12 @@ class ReturnViewSet(viewsets.ModelViewSet):
         if notes:
             return_obj.manager_notes = notes
         return_obj.save()
+        
+        # ✅ Enviar email al cliente notificando que está en evaluación
+        try:
+            send_return_evaluation_started_notification(return_obj)
+        except Exception as e:
+            print(f"⚠️  Error enviando email al cliente: {str(e)}")
         
         serializer = self.get_serializer(return_obj)
         return Response({
@@ -489,8 +503,11 @@ class ReturnViewSet(viewsets.ModelViewSet):
         return_obj.completed_at = timezone.now()
         return_obj.save()
         
-        # TODO: Enviar email al cliente
-        # self._send_approval_email(return_obj)
+        # ✅ Enviar email al cliente notificando aprobación
+        try:
+            send_return_approved_notification(return_obj)
+        except Exception as e:
+            print(f"⚠️  Error enviando email al cliente: {str(e)}")
         
         serializer = self.get_serializer(return_obj)
         return Response({
@@ -531,45 +548,17 @@ class ReturnViewSet(viewsets.ModelViewSet):
         return_obj.evaluated_at = timezone.now()
         return_obj.save()
         
-        # TODO: Enviar email al cliente con el motivo del rechazo
-        # self._send_rejection_email(return_obj)
+        # ✅ Enviar email al cliente notificando rechazo
+        try:
+            send_return_rejected_notification(return_obj)
+        except Exception as e:
+            print(f"⚠️  Error enviando email al cliente: {str(e)}")
         
         serializer = self.get_serializer(return_obj)
         return Response({
             **serializer.data,
             'message': '❌ Devolución rechazada. Se ha notificado al cliente.'
         })
-    
-    def _process_refund(self, return_obj):
-        """
-        Procesar reembolso automáticamente según el método seleccionado
-        TODO: Implementar lógica de reembolso
-        """
-        if return_obj.refund_method == Return.RefundMethod.WALLET:
-            # Agregar a billetera virtual del usuario
-            # user.wallet_balance += return_obj.refund_amount
-            # user.save()
-            pass
-        elif return_obj.refund_method == Return.RefundMethod.ORIGINAL:
-            # Reembolsar al método original (Stripe, etc.)
-            pass
-        elif return_obj.refund_method == Return.RefundMethod.BANK:
-            # Registrar para transferencia bancaria manual
-            pass
-    
-    def _send_approval_email(self, return_obj):
-        """
-        Enviar email al cliente notificando aprobación
-        TODO: Implementar envío de email
-        """
-        pass
-    
-    def _send_rejection_email(self, return_obj):
-        """
-        Enviar email al cliente notificando rechazo con motivo
-        TODO: Implementar envío de email
-        """
-        pass
 
 
 class RepairViewSet(viewsets.ModelViewSet):

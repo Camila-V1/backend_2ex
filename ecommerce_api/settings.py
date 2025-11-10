@@ -325,3 +325,34 @@ SPECTACULAR_SETTINGS = {
         }
     ],
 }
+
+
+# ==========================================
+# 📧 EMAIL CONFIGURATION
+# ==========================================
+
+# Para desarrollo: usar console backend (imprime emails en consola)
+# Para producción: cambiar a SMTP backend
+
+EMAIL_BACKEND = config(
+    'EMAIL_BACKEND',
+    default='django.core.mail.backends.console.EmailBackend'  # Dev: imprime en consola
+    # Para producción usar: 'django.core.mail.backends.smtp.EmailBackend'
+)
+
+# Configuración SMTP (para producción con Gmail, SendGrid, etc.)
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+
+# Email del remitente por defecto
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@smartsales365.com')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Email del administrador del sistema
+ADMIN_EMAIL = config('ADMIN_EMAIL', default='admin@smartsales365.com')
+
+# Prefijo para asuntos de email
+EMAIL_SUBJECT_PREFIX = config('EMAIL_SUBJECT_PREFIX', default='[SmartSales365] ')

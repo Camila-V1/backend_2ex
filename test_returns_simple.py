@@ -151,9 +151,11 @@ def test_solicitar_devolucion(cliente, orden, producto):
     print_info(f"  - Descripción: {devolucion.description}")
     print_info(f"  - Fecha: {devolucion.requested_at.strftime('%Y-%m-%d %H:%M:%S')}")
     
-    print("\n📧 Email enviado al Manager:")
-    print(f"   Asunto: 🔔 Nueva Solicitud de Devolución #{devolucion.id}")
-    print(f"   Para: manager.returns@test.com")
+    # Simular envío de email (en modo console backend se imprime en consola)
+    print("\n📧 Sistema de emails activado:")
+    print("   ✅ Email a managers: Sistema enviará notificación automáticamente")
+    from deliveries.email_utils import send_new_return_notification_to_managers
+    send_new_return_notification_to_managers(devolucion)
     
     return devolucion
 
@@ -176,6 +178,11 @@ def test_enviar_a_evaluacion(manager, devolucion):
     print_info(f"  - Estado anterior: REQUESTED")
     print_info(f"  - Estado actual: {devolucion.get_status_display()}")
     print_info(f"  - Notas: {devolucion.manager_notes}")
+    
+    # Enviar email al cliente
+    from deliveries.email_utils import send_return_evaluation_started_notification
+    print("\n📧 Email enviado al cliente:")
+    send_return_evaluation_started_notification(devolucion)
 
 
 def test_aprobar_devolucion(manager, devolucion):
@@ -224,14 +231,10 @@ def test_aprobar_devolucion(manager, devolucion):
     print_info(f"  - Estado final: {devolucion.get_status_display()}")
     print_info(f"  - Completado: {devolucion.completed_at.strftime('%Y-%m-%d %H:%M:%S')}")
     
-    print("\n📧 Email enviado al Cliente:")
-    print(f"   Asunto: ✅ Tu Devolución #{devolucion.id} ha sido Aprobada")
-    print(f"   Para: {devolucion.user.email}")
-    print(f"   Mensaje:")
-    print(f"   - Devolución aprobada")
-    print(f"   - Monto reembolsado: ${devolucion.refund_amount}")
-    print(f"   - Método: {devolucion.get_refund_method_display()}")
-    print(f"   - El saldo estará disponible en tu billetera virtual en 24-48 horas")
+    # Enviar email de aprobación
+    from deliveries.email_utils import send_return_approved_notification
+    print("\n📧 Email de aprobación enviado:")
+    send_return_approved_notification(devolucion)
 
 
 def test_rechazar_devolucion(manager, orden, producto, cliente):
@@ -285,13 +288,10 @@ def test_rechazar_devolucion(manager, orden, producto, cliente):
     print_info(f"  - Estado: {devolucion2.get_status_display()}")
     print_info(f"  - Motivo: Producto cumple especificaciones")
     
-    print("\n📧 Email enviado al Cliente:")
-    print(f"   Asunto: ❌ Tu Solicitud de Devolución #{devolucion2.id}")
-    print(f"   Para: {devolucion2.user.email}")
-    print(f"   Mensaje:")
-    print(f"   - Lamentamos informarte que tu solicitud ha sido rechazada")
-    print(f"   - Motivo: {devolucion2.manager_notes}")
-    print(f"   - Si tienes dudas, contáctanos en: soporte@smartsales365.com")
+    # Enviar email de rechazo
+    from deliveries.email_utils import send_return_rejected_notification
+    print("\n📧 Email de rechazo enviado:")
+    send_return_rejected_notification(devolucion2)
 
 
 def test_ver_historial(cliente):
