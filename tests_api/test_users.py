@@ -68,9 +68,10 @@ def test_create_user(access_token):
         'username': 'test_user_api',
         'email': 'testapi@example.com',
         'password': 'testpass123',
+        'password2': 'testpass123',  # Confirmar contraseña
         'first_name': 'Test',
         'last_name': 'API',
-        'role': 'CLIENTE'
+        'role': 'CLIENT'  # Debe ser CLIENT, no CLIENTE
     }
     
     try:

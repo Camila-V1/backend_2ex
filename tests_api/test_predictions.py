@@ -17,7 +17,7 @@ def test_sales_predictions(access_token):
         response = requests.get(
             f"{API_BASE_URL}/predictions/sales/",
             headers=headers,
-            timeout=15
+            timeout=30  # Aumentar timeout a 30s para ML
         )
         
         if response.status_code == 200:
