@@ -71,7 +71,7 @@ def test_create_user(access_token):
         'password2': 'testpass123',  # Confirmar contraseña
         'first_name': 'Test',
         'last_name': 'API',
-        'role': 'CLIENT'  # Debe ser CLIENT, no CLIENTE
+        'role': 'DELIVERY'  # Usar un rol válido: ADMIN, MANAGER, CAJERO, DELIVERY
     }
     
     try:
