@@ -7,7 +7,7 @@ from .wallet_views import WalletViewSet, WalletTransactionViewSet
 
 # Usar SimpleRouter
 router = SimpleRouter()
-router.register(r'users', UserViewSet, basename='user')
+router.register(r'', UserViewSet, basename='user')  # Ruta vacía porque ya está en /api/users/
 router.register(r'wallets', WalletViewSet, basename='wallet')
 router.register(r'wallet-transactions', WalletTransactionViewSet, basename='wallet-transaction')
 
