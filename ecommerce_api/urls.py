@@ -31,7 +31,14 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
+# Importar health check
+from .views import health_check
+
 urlpatterns = [
+    # Health check para Render y otros servicios de deployment
+    path('', health_check, name='health_check'),
+    path('health/', health_check, name='health_check_explicit'),
+    
     path('admin/', admin.site.urls),
     
     # URLs para autenticación JWT
