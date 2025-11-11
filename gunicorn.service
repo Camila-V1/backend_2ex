@@ -1,0 +1,12 @@
+[Unit]
+Description=gunicorn daemon
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/var/www/django-backend
+ExecStart=/var/www/django-backend/venv/bin/gunicorn --workers 3 --bind unix:/var/www/django-backend/gunicorn.sock ecommerce_api.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

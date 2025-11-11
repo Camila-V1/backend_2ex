@@ -1,1 +1,38 @@
 django-db.cormkuccww82.us-east-1.rds.amazonaws.com
+
+NUEVA INSTANCIA EC2:
+====================
+Instance ID: i-0f5db5c1b5eae1b80
+IP Pública: 98.92.49.243
+Región: us-east-1c
+Tipo: t3.micro
+Key Name: django-backend-key
+Security Group: django-backend-sg (sg-0cc0c93c58aedcd87)
+Estado: running
+
+URLs DEL NUEVO SERVIDOR:
+========================
+API Root: http://98.92.49.243/api/
+Django Admin: http://98.92.49.243/admin/
+Productos: http://98.92.49.243/api/products/
+Login: http://98.92.49.243/api/users/login/
+
+CREDENCIALES:
+=============
+Admin: admin / admin123
+Cliente: juan_cliente / password123
+Manager: carlos_manager / manager123
+
+COMANDOS ÚTILES:
+================
+# Conectar por SSH:
+ssh -i django-backend-key.pem ubuntu@98.92.49.243
+
+# Ver logs de Gunicorn:
+ssh -i django-backend-key.pem ubuntu@98.92.49.243 "sudo journalctl -u gunicorn -n 50 --no-pager"
+
+# Reiniciar servicios:
+ssh -i django-backend-key.pem ubuntu@98.92.49.243 "sudo systemctl restart gunicorn nginx"
+
+# Poblar base de datos:
+ssh -i django-backend-key.pem ubuntu@98.92.49.243 "cd /var/www/django-backend && source venv/bin/activate && python seed_complete_database.py"

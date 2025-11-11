@@ -14,7 +14,20 @@
 
 ---
 
-## 📋 PASO FINAL: DESPLEGAR LA APLICACIÓN
+## ✅ RESUMEN DEL NUEVO DESPLIEGUE - ACTUALIZADO
+
+## 🆕 NUEVO SERVIDOR DESPLEGADO (11 Nov 2025)
+
+### 🖥️ Instancia EC2 Nueva
+- **Instance ID**: i-0f5db5c1b5eae1b80
+- **IP Pública**: **98.92.49.243** ⭐ (USAR ESTA)
+- **IP Antigua**: ~~3.88.180.221~~ (Terminada)
+- **Estado**: Despliegue en progreso
+- **Key Name**: django-backend-key ✅ (Funcional)
+
+---
+
+# 📋 RESUMEN DEL DESPLIEGUE EN AWS
 
 ### Opción 1: Usar Cliente SSH (Git Bash o PowerShell con OpenSSH)
 

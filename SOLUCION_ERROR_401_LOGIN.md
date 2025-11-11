@@ -23,7 +23,24 @@ POST /api/token/ → 401 Unauthorized
 
 ---
 
-## 🎯 Solución: Formato Correcto
+# 🔧 Solución: Error 404 en Login - Endpoint Incorrecto
+
+## ✅ **DIAGNÓSTICO CONFIRMADO:**
+
+```
+✅ Productos endpoint funciona:   http://98.92.49.243/api/products/  → 200 OK
+❌ Login endpoint no funciona:    http://98.92.49.243/api/users/login/ → 404 NOT FOUND
+```
+
+**El problema es que tu frontend está usando el endpoint INCORRECTO:**
+```
+❌ Frontend usa:  /api/token/
+✅ Debe usar:     /api/users/login/
+```
+
+---
+
+# 🔧 Solución: Errores de Mixed Content y Endpoints Incorrectos
 
 ### Endpoint de Login
 ```

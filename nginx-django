@@ -1,0 +1,28 @@
+server {
+    listen 80;
+    server_name 98.92.49.243;
+    
+    client_max_body_size 10M;
+    
+    location = /favicon.ico { 
+        access_log off; 
+        log_not_found off; 
+    }
+    
+    location /static/ { 
+        alias /var/www/django-backend/staticfiles/; 
+    }
+    
+    location /media/ { 
+        alias /var/www/django-backend/media/; 
+    }
+    
+    location / {
+        proxy_pass http://unix:/var/www/django-backend/gunicorn.sock;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+    }
+}
