@@ -225,6 +225,12 @@ else:
         "http://127.0.0.1:4200",
     ]
 
+# Permitir patrones regex para origenes (útil para Vercel con URLs dinámicas)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://web-2ex.*\.vercel\.app$",  # Permite todas las preview URLs de Vercel
+    r"^https://.*-vazquescamila121-7209s-projects\.vercel\.app$",  # Pattern de usuario
+]
+
 # Permitir cookies y credenciales en peticiones CORS
 CORS_ALLOW_CREDENTIALS = True
 
