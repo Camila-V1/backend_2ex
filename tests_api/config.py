@@ -7,7 +7,7 @@ import os
 # URL base de la API (cambiar según entorno)
 API_BASE_URL = os.getenv('API_BASE_URL', 'https://backend-2ex-ecommerce.onrender.com/api')
 
-# Credenciales de prueba (deben coincidir con seed_data.py)
+# Credenciales de prueba (deben coincidir EXACTAMENTE con seed_data.py)
 TEST_CREDENTIALS = {
     'admin': {
         'username': 'admin',
@@ -15,15 +15,15 @@ TEST_CREDENTIALS = {
     },
     'manager': {
         'username': 'carlos_manager',
-        'password': 'manager123'
+        'password': 'carlos123'  # Contraseña real de seed_data.py
     },
     'cajero': {
         'username': 'luis_cajero',
-        'password': 'cajero123'
+        'password': 'luis123'  # Contraseña real de seed_data.py
     },
     'delivery': {
         'username': 'pedro_delivery',
-        'password': 'delivery123'
+        'password': 'pedro123'  # Contraseña real de seed_data.py
     }
 }
 

@@ -64,9 +64,12 @@ def test_create_user(access_token):
     """Prueba crear un nuevo usuario"""
     print(f"\n{Colors.BOLD}➕ Probando crear usuario...{Colors.ENDC}")
     
+    import time
+    timestamp = int(time.time())
+    
     new_user = {
-        'username': 'test_user_api',
-        'email': 'testapi@example.com',
+        'username': f'test_user_{timestamp}',  # Username único con timestamp
+        'email': f'testapi_{timestamp}@example.com',  # Email único
         'password': 'testpass123',
         'password2': 'testpass123',  # Confirmar contraseña
         'first_name': 'Test',

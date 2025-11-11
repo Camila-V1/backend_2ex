@@ -182,6 +182,102 @@ def create_users():
             'is_staff': False,
             'is_superuser': False
         },
+        
+        # Más cajeros
+        {
+            'username': 'maria_cajero',
+            'email': 'maria.cajero@ecommerce.com',
+            'password': 'maria123',
+            'first_name': 'María',
+            'last_name': 'Hernández',
+            'role': 'CAJERO',
+            'is_staff': True,
+            'is_superuser': False
+        },
+        
+        # Más delivery
+        {
+            'username': 'pedro_delivery',
+            'email': 'pedro.delivery@ecommerce.com',
+            'password': 'pedro123',
+            'first_name': 'Pedro',
+            'last_name': 'Ruiz',
+            'role': 'DELIVERY',
+            'is_staff': False,
+            'is_superuser': False
+        },
+        {
+            'username': 'andrea_delivery',
+            'email': 'andrea.delivery@ecommerce.com',
+            'password': 'andrea123',
+            'first_name': 'Andrea',
+            'last_name': 'Castro',
+            'role': 'DELIVERY',
+            'is_staff': False,
+            'is_superuser': False
+        },
+        
+        # Más clientes
+        {
+            'username': 'roberto_cliente',
+            'email': 'roberto@email.com',
+            'password': 'roberto123',
+            'first_name': 'Roberto',
+            'last_name': 'Silva',
+            'role': None,
+            'is_staff': False,
+            'is_superuser': False
+        },
+        {
+            'username': 'patricia_cliente',
+            'email': 'patricia@email.com',
+            'password': 'patricia123',
+            'first_name': 'Patricia',
+            'last_name': 'Ortiz',
+            'role': None,
+            'is_staff': False,
+            'is_superuser': False
+        },
+        {
+            'username': 'fernando_cliente',
+            'email': 'fernando@email.com',
+            'password': 'fernando123',
+            'first_name': 'Fernando',
+            'last_name': 'Vargas',
+            'role': None,
+            'is_staff': False,
+            'is_superuser': False
+        },
+        {
+            'username': 'gabriela_cliente',
+            'email': 'gabriela@email.com',
+            'password': 'gabriela123',
+            'first_name': 'Gabriela',
+            'last_name': 'Mendoza',
+            'role': None,
+            'is_staff': False,
+            'is_superuser': False
+        },
+        {
+            'username': 'ricardo_cliente',
+            'email': 'ricardo@email.com',
+            'password': 'ricardo123',
+            'first_name': 'Ricardo',
+            'last_name': 'Flores',
+            'role': None,
+            'is_staff': False,
+            'is_superuser': False
+        },
+        {
+            'username': 'valeria_cliente',
+            'email': 'valeria@email.com',
+            'password': 'valeria123',
+            'first_name': 'Valeria',
+            'last_name': 'Reyes',
+            'role': None,
+            'is_staff': False,
+            'is_superuser': False
+        },
     ]
     
     created_users = []
@@ -208,6 +304,10 @@ def create_categories():
         {'name': 'Hogar', 'description': 'Electrodomésticos y artículos para el hogar'},
         {'name': 'Oficina', 'description': 'Artículos y equipos de oficina'},
         {'name': 'Deportes', 'description': 'Equipamiento y ropa deportiva'},
+        {'name': 'Fotografía', 'description': 'Cámaras, lentes y accesorios fotográficos'},
+        {'name': 'Moda', 'description': 'Ropa, accesorios y calzado'},
+        {'name': 'Libros', 'description': 'Libros físicos y digitales'},
+        {'name': 'Juguetes', 'description': 'Juguetes y juegos para todas las edades'},
     ]
     
     categories = []
@@ -273,6 +373,63 @@ def create_products(categories):
         {'name': 'Bicicleta Estática', 'description': 'Bicicleta estática con pantalla LCD', 'price': 3999.99, 'stock': 10, 'category': 'Deportes', 'warranty_info': '2 años de garantía'},
         {'name': 'Mancuernas Ajustables', 'description': 'Set de mancuernas ajustables 5-25kg', 'price': 1999.99, 'stock': 22, 'category': 'Deportes', 'warranty_info': '5 años de garantía'},
         {'name': 'Banda Elástica Set', 'description': 'Set de 5 bandas elásticas de resistencia', 'price': 299.99, 'stock': 60, 'category': 'Deportes', 'warranty_info': '1 año de garantía'},
+        {'name': 'Caminadora Profesional', 'description': 'Caminadora plegable con monitor de frecuencia', 'price': 5999.99, 'stock': 8, 'category': 'Deportes', 'warranty_info': '3 años de garantía'},
+        {'name': 'Pelota de Yoga', 'description': 'Pelota de yoga antideslizante 65cm', 'price': 249.99, 'stock': 45, 'category': 'Deportes', 'warranty_info': '1 año de garantía'},
+        
+        # Fotografía
+        {'name': 'Cámara Canon EOS R6', 'description': 'Cámara mirrorless full-frame 20MP', 'price': 25999.99, 'stock': 5, 'category': 'Fotografía', 'warranty_info': '2 años de garantía'},
+        {'name': 'Nikon Z5', 'description': 'Cámara mirrorless full-frame 24MP', 'price': 18999.99, 'stock': 7, 'category': 'Fotografía', 'warranty_info': '2 años de garantía'},
+        {'name': 'Lente Canon RF 24-70mm', 'description': 'Lente zoom estándar f/2.8', 'price': 15999.99, 'stock': 10, 'category': 'Fotografía', 'warranty_info': '1 año de garantía'},
+        {'name': 'Trípode Profesional', 'description': 'Trípode de aluminio con cabezal de bola', 'price': 1499.99, 'stock': 25, 'category': 'Fotografía', 'warranty_info': '5 años de garantía'},
+        {'name': 'Flash Externo', 'description': 'Flash speedlite profesional TTL', 'price': 2499.99, 'stock': 18, 'category': 'Fotografía', 'warranty_info': '2 años de garantía'},
+        {'name': 'Mochila Fotográfica', 'description': 'Mochila impermeable para cámara y lentes', 'price': 899.99, 'stock': 30, 'category': 'Fotografía', 'warranty_info': '2 años de garantía'},
+        {'name': 'Tarjeta SD 128GB', 'description': 'Tarjeta SD UHS-II 300MB/s', 'price': 599.99, 'stock': 50, 'category': 'Fotografía', 'warranty_info': 'Garantía de por vida'},
+        
+        # Moda
+        {'name': 'Zapatillas Nike Air Max', 'description': 'Zapatillas deportivas con tecnología Air', 'price': 1999.99, 'stock': 40, 'category': 'Moda', 'warranty_info': '6 meses de garantía'},
+        {'name': 'Zapatillas Adidas Ultraboost', 'description': 'Zapatillas running con tecnología Boost', 'price': 2299.99, 'stock': 35, 'category': 'Moda', 'warranty_info': '6 meses de garantía'},
+        {'name': 'Reloj Casio G-Shock', 'description': 'Reloj digital resistente al agua', 'price': 1499.99, 'stock': 28, 'category': 'Moda', 'warranty_info': '2 años de garantía'},
+        {'name': 'Gafas de Sol Ray-Ban', 'description': 'Gafas de sol estilo aviador UV400', 'price': 1999.99, 'stock': 32, 'category': 'Moda', 'warranty_info': '2 años de garantía'},
+        {'name': 'Mochila Deportiva Under Armour', 'description': 'Mochila deportiva impermeable 30L', 'price': 899.99, 'stock': 45, 'category': 'Moda', 'warranty_info': '1 año de garantía'},
+        {'name': 'Billetera de Cuero', 'description': 'Billetera de cuero genuino con bloqueo RFID', 'price': 499.99, 'stock': 60, 'category': 'Moda', 'warranty_info': '2 años de garantía'},
+        
+        # Libros
+        {'name': 'Clean Code - Robert Martin', 'description': 'Libro sobre programación limpia y buenas prácticas', 'price': 599.99, 'stock': 50, 'category': 'Libros', 'warranty_info': 'No aplica'},
+        {'name': 'El Principito', 'description': 'Clásico de la literatura universal', 'price': 149.99, 'stock': 80, 'category': 'Libros', 'warranty_info': 'No aplica'},
+        {'name': 'Atomic Habits', 'description': 'Libro de desarrollo personal por James Clear', 'price': 399.99, 'stock': 65, 'category': 'Libros', 'warranty_info': 'No aplica'},
+        {'name': 'Python Crash Course', 'description': 'Guía práctica para aprender Python', 'price': 699.99, 'stock': 40, 'category': 'Libros', 'warranty_info': 'No aplica'},
+        {'name': '1984 - George Orwell', 'description': 'Novela distópica clásica', 'price': 199.99, 'stock': 70, 'category': 'Libros', 'warranty_info': 'No aplica'},
+        
+        # Juguetes
+        {'name': 'LEGO Star Wars Millennium Falcon', 'description': 'Set LEGO coleccionable 7541 piezas', 'price': 7999.99, 'stock': 12, 'category': 'Juguetes', 'warranty_info': '1 año de garantía'},
+        {'name': 'Cubo Rubik Original', 'description': 'Cubo Rubik 3x3 oficial', 'price': 199.99, 'stock': 100, 'category': 'Juguetes', 'warranty_info': '6 meses de garantía'},
+        {'name': 'Monopoly Edición Clásica', 'description': 'Juego de mesa Monopoly tradicional', 'price': 449.99, 'stock': 55, 'category': 'Juguetes', 'warranty_info': '1 año de garantía'},
+        {'name': 'Dron con Cámara HD', 'description': 'Dron plegable con cámara 1080p', 'price': 2999.99, 'stock': 15, 'category': 'Juguetes', 'warranty_info': '1 año de garantía'},
+        {'name': 'Pista Hot Wheels', 'description': 'Pista de carreras con loop gigante', 'price': 899.99, 'stock': 30, 'category': 'Juguetes', 'warranty_info': '1 año de garantía'},
+        
+        # Más Electrónica
+        {'name': 'Amazon Echo Dot 5', 'description': 'Bocina inteligente con Alexa', 'price': 799.99, 'stock': 50, 'category': 'Electrónica', 'warranty_info': '1 año de garantía'},
+        {'name': 'Google Nest Hub', 'description': 'Pantalla inteligente con Google Assistant', 'price': 1299.99, 'stock': 35, 'category': 'Electrónica', 'warranty_info': '1 año de garantía'},
+        {'name': 'Ring Video Doorbell', 'description': 'Timbre inteligente con cámara HD', 'price': 1799.99, 'stock': 28, 'category': 'Electrónica', 'warranty_info': '1 año de garantía'},
+        {'name': 'Chromecast con Google TV', 'description': 'Dispositivo de streaming 4K', 'price': 699.99, 'stock': 60, 'category': 'Electrónica', 'warranty_info': '1 año de garantía'},
+        
+        # Más Computadoras
+        {'name': 'Webcam Logitech C920', 'description': 'Cámara web Full HD 1080p', 'price': 899.99, 'stock': 42, 'category': 'Computadoras', 'warranty_info': '2 años de garantía'},
+        {'name': 'Disco Duro Externo 2TB', 'description': 'Disco duro portátil USB 3.0', 'price': 1299.99, 'stock': 55, 'category': 'Computadoras', 'warranty_info': '3 años de garantía'},
+        {'name': 'SSD Samsung 1TB', 'description': 'SSD NVMe M.2 velocidad 7000MB/s', 'price': 1799.99, 'stock': 38, 'category': 'Computadoras', 'warranty_info': '5 años de garantía'},
+        {'name': 'Hub USB-C 7 en 1', 'description': 'Hub multipuerto con HDMI y USB 3.0', 'price': 599.99, 'stock': 65, 'category': 'Computadoras', 'warranty_info': '2 años de garantía'},
+        {'name': 'Alfombrilla RGB XXL', 'description': 'Alfombrilla de escritorio gaming con RGB', 'price': 399.99, 'stock': 70, 'category': 'Computadoras', 'warranty_info': '1 año de garantía'},
+        
+        # Más Gaming
+        {'name': 'Volante Logitech G29', 'description': 'Volante de carreras con pedales', 'price': 4999.99, 'stock': 12, 'category': 'Gaming', 'warranty_info': '2 años de garantía'},
+        {'name': 'Micrófono HyperX QuadCast', 'description': 'Micrófono USB para streaming', 'price': 1999.99, 'stock': 25, 'category': 'Gaming', 'warranty_info': '2 años de garantía'},
+        {'name': 'Auriculares SteelSeries Arctis', 'description': 'Auriculares gaming inalámbricos 7.1', 'price': 2499.99, 'stock': 30, 'category': 'Gaming', 'warranty_info': '1 año de garantía'},
+        
+        # Más Hogar
+        {'name': 'Purificador de Aire Xiaomi', 'description': 'Purificador de aire con filtro HEPA', 'price': 1999.99, 'stock': 20, 'category': 'Hogar', 'warranty_info': '2 años de garantía'},
+        {'name': 'Ventilador de Torre', 'description': 'Ventilador silencioso con control remoto', 'price': 899.99, 'stock': 35, 'category': 'Hogar', 'warranty_info': '1 año de garantía'},
+        {'name': 'Termostato Inteligente', 'description': 'Termostato WiFi programable', 'price': 1499.99, 'stock': 22, 'category': 'Hogar', 'warranty_info': '2 años de garantía'},
+        {'name': 'Humidificador Ultrasónico', 'description': 'Humidificador silencioso 4L', 'price': 699.99, 'stock': 40, 'category': 'Hogar', 'warranty_info': '1 año de garantía'},
     ]
     
     # Mapear categorías por nombre

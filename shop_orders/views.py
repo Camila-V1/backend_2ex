@@ -54,7 +54,7 @@ class CreateOrderView(APIView):
     Vista para crear una nueva orden a partir del carrito de compras.
     Permisos: CAJERO, MANAGER o ADMIN pueden crear órdenes.
     """
-    permission_classes = [IsCajeroUser]
+    permission_classes = [permissions.IsAuthenticated]  # Cualquier usuario autenticado puede crear órdenes
     serializer_class = OrderCreateSerializer
 
     def post(self, request, *args, **kwargs):
