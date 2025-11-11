@@ -194,16 +194,23 @@ stripe.api_key = STRIPE_SECRET_KEY
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 
 # CORS Configuration - Permitir peticiones desde el frontend
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite default
-    "http://localhost:3000",  # React default
-    "http://localhost:8080",  # Vue default
-    "http://localhost:4200",  # Angular default
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:8080",
-    "http://127.0.0.1:4200",
-]
+# Leer desde variable de entorno (separada por comas) o usar defaults de desarrollo
+cors_origins_env = config('CORS_ALLOWED_ORIGINS', default='')
+if cors_origins_env:
+    # Si hay variable de entorno, usar esos orígenes (separados por coma)
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_env.split(',')]
+else:
+    # Si no, usar defaults de desarrollo
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173",  # Vite default
+        "http://localhost:3000",  # React default
+        "http://localhost:8080",  # Vue default
+        "http://localhost:4200",  # Angular default
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:4200",
+    ]
 
 # Permitir cookies y credenciales en peticiones CORS
 CORS_ALLOW_CREDENTIALS = True
