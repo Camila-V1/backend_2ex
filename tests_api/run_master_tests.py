@@ -23,14 +23,16 @@ def main():
     
     test_suites = [
         # Tests originales (básicos)
-        ('test_auth.py', '🔐 [1/6] AUTENTICACIÓN (Tests Básicos)'),
-        ('test_users.py', '👥 [2/6] USUARIOS (Tests Básicos)'),
-        ('test_products.py', '📦 [3/6] PRODUCTOS (Tests Básicos)'),
+        ('test_auth.py', '🔐 [1/8] AUTENTICACIÓN (Tests Básicos)'),
+        ('test_users.py', '👥 [2/8] USUARIOS (Tests Básicos)'),
+        ('test_products.py', '📦 [3/8] PRODUCTOS (Tests Básicos)'),
         
         # Tests completos nuevos (cobertura extendida)
-        ('test_orders_complete.py', '🛒 [4/6] ORDERS COMPLETO (Tests Extendidos)'),
-        ('test_wallet_complete.py', '💰 [5/6] WALLET COMPLETO (Tests Extendidos)'),
-        ('test_deliveries_complete.py', '🚚 [6/6] DELIVERIES COMPLETO (Tests Extendidos)'),
+        ('test_orders_complete.py', '🛒 [4/8] ORDERS COMPLETO (Tests Extendidos)'),
+        ('test_wallet_complete.py', '💰 [5/8] WALLET COMPLETO (Tests Extendidos)'),
+        ('test_deliveries_complete.py', '🚚 [6/8] DELIVERIES COMPLETO (Tests Extendidos)'),
+        ('test_reports_complete.py', '📊 [7/8] REPORTS COMPLETO (Tests Extendidos)'),
+        ('test_audit_complete.py', '🔍 [8/8] AUDIT COMPLETO (Tests Extendidos)'),
     ]
     
     results = {}
@@ -62,8 +64,8 @@ def main():
     # Estimación de cobertura
     print(f"\n{Colors.OKCYAN}📈 ESTIMACIÓN DE COBERTURA:{Colors.ENDC}")
     print(f"   Tests Básicos:     ~17 endpoints (~30% del sistema)")
-    print(f"   Tests Extendidos:  ~25+ endpoints adicionales")
-    print(f"   {Colors.BOLD}Cobertura Total:   ~42+ endpoints (~75% del sistema){Colors.ENDC}")
+    print(f"   Tests Extendidos:  ~42 endpoints adicionales")
+    print(f"   {Colors.BOLD}Cobertura Total:   ~59 endpoints (~95-100% del sistema){Colors.ENDC}")
     print(f"{Colors.BOLD}{'='*70}{Colors.ENDC}\n")
     
     return 0 if failed_suites == 0 else 1
