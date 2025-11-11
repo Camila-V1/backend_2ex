@@ -260,154 +260,239 @@ def create_users():
 
 
 def create_orders(users, products):
-    """Crea órdenes variadas para los clientes"""
+    """Crea órdenes variadas para los clientes con todos los estados"""
     print("\n" + "="*80)
     print("CREANDO ÓRDENES...")
     print("="*80)
     
     orders = []
-    # Estados disponibles en Order.OrderStatus (evitar PAID para no disparar signal de Delivery)
-    statuses = ['DELIVERED', 'SHIPPED', 'PENDING', 'DELIVERED', 'DELIVERED', 'DELIVERED']  # Más DELIVERED para poder devolver
     
-    # Crear 30-50 órdenes
-    for i in range(40):
-        cliente = random.choice(users['clientes'])
-        status = random.choice(statuses)
+    # Crear órdenes con distribución específica de estados
+    order_configs = [
+        # PENDING - Órdenes recientes sin pagar (5 órdenes)
+        {'status': 'PENDING', 'count': 5, 'days_range': (0, 3)},
         
-        order = Order.objects.create(
-            user=cliente,
-            status=status
-        )
+        # SHIPPED - Órdenes enviadas en camino (8 órdenes)
+        {'status': 'SHIPPED', 'count': 8, 'days_range': (1, 7)},
         
-        # Agregar 1-3 items a la orden
-        num_items = random.randint(1, 3)
-        selected_products = random.sample(products, min(num_items, len(products)))
+        # DELIVERED - Órdenes entregadas recientemente (15 órdenes) - Pueden devolver
+        {'status': 'DELIVERED', 'count': 15, 'days_range': (3, 15)},
         
-        total = Decimal('0')
-        for product in selected_products:
-            quantity = random.randint(1, 2)
-            price = product.price
+        # DELIVERED - Órdenes entregadas hace tiempo (20 órdenes) - Pueden devolver
+        {'status': 'DELIVERED', 'count': 20, 'days_range': (16, 29)},
+        
+        # DELIVERED - Órdenes muy antiguas (10 órdenes) - Fuera de ventana de devolución
+        {'status': 'DELIVERED', 'count': 10, 'days_range': (31, 90)},
+        
+        # CANCELLED - Órdenes canceladas (7 órdenes)
+        {'status': 'CANCELLED', 'count': 7, 'days_range': (1, 30)},
+    ]
+    
+    for config in order_configs:
+        for i in range(config['count']):
+            cliente = random.choice(users['clientes'])
+            status = config['status']
             
-            OrderItem.objects.create(
-                order=order,
-                product=product,
-                quantity=quantity,
-                price=price
+            order = Order.objects.create(
+                user=cliente,
+                status=status
             )
             
-            total += price * quantity
-        
-        order.total_price = total
-        order.save()
-        
-        # Modificar fecha de creación para simular órdenes antiguas
-        days_ago = random.randint(1, 60)
-        order.created_at = datetime.now() - timedelta(days=days_ago)
-        order.save(update_fields=['created_at'])
-        
-        orders.append(order)
-        
-        items_str = ", ".join([f"{item.product.name} x{item.quantity}" for item in order.items.all()])
-        print(f"✅ Orden #{order.id} - {cliente.username} - {order.get_status_display()} - ${order.total_price}")
-        print(f"   Items: {items_str}")
+            # Agregar 1-4 items a la orden (más variedad)
+            num_items = random.randint(1, 4)
+            selected_products = random.sample(products, min(num_items, len(products)))
+            
+            total = Decimal('0')
+            for product in selected_products:
+                quantity = random.randint(1, 3)
+                price = product.price
+                
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=quantity,
+                    price=price
+                )
+                
+                total += price * quantity
+            
+            order.total_price = total
+            order.save()
+            
+            # Modificar fecha de creación según configuración
+            from django.utils import timezone
+            days_ago = random.randint(config['days_range'][0], config['days_range'][1])
+            order.created_at = timezone.now() - timedelta(days=days_ago)
+            order.save(update_fields=['created_at'])
+            
+            orders.append(order)
+            
+            items_str = ", ".join([f"{item.product.name} x{item.quantity}" for item in order.items.all()])
+            status_emoji = {
+                'PENDING': '🟡',
+                'SHIPPED': '🚚',
+                'DELIVERED': '✅',
+                'CANCELLED': '❌'
+            }.get(status, '📦')
+            
+            print(f"{status_emoji} Orden #{order.id} - {cliente.username} - {order.get_status_display()} - ${order.total_price} ({days_ago} días atrás)")
+            print(f"   Items: {items_str}")
     
     print(f"\n📊 Total órdenes creadas: {len(orders)}")
+    print(f"   🟡 PENDING: {len([o for o in orders if o.status == 'PENDING'])}")
+    print(f"   🚚 SHIPPED: {len([o for o in orders if o.status == 'SHIPPED'])}")
+    print(f"   ✅ DELIVERED: {len([o for o in orders if o.status == 'DELIVERED'])}")
+    print(f"   ❌ CANCELLED: {len([o for o in orders if o.status == 'CANCELLED'])}")
+    
     return orders
 
 
 def create_returns(orders, users):
-    """Crea devoluciones variadas"""
+    """Crea devoluciones variadas con todos los estados posibles"""
     print("\n" + "="*80)
     print("CREANDO DEVOLUCIONES...")
     print("="*80)
     
     returns = []
-    statuses = ['REQUESTED', 'IN_EVALUATION', 'APPROVED', 'REJECTED', 'REQUESTED', 'APPROVED']
-    refund_methods = ['WALLET', 'ORIGINAL', 'WALLET', 'WALLET']  # Más WALLET
     reason_choices = ['DEFECTIVE', 'WRONG_ITEM', 'NOT_AS_DESCRIBED', 'CHANGED_MIND', 'OTHER']
     
-    # Solo crear devoluciones para órdenes DELIVERED
+    # Solo crear devoluciones para órdenes DELIVERED dentro de 30 días
+    from django.utils import timezone
     delivered_orders = [o for o in orders if o.status == 'DELIVERED']
+    valid_orders = [o for o in delivered_orders if (timezone.now() - o.created_at).days <= 30]
     
-    # Crear 15-25 devoluciones
-    num_returns = min(20, len(delivered_orders))
-    selected_orders = random.sample(delivered_orders, num_returns)
+    # Configuración de devoluciones por estado
+    return_configs = [
+        # REQUESTED - Esperando evaluación del manager (8 devoluciones)
+        {'status': 'REQUESTED', 'count': 8, 'refund_processed': False},
+        
+        # IN_EVALUATION - En revisión física (6 devoluciones)
+        {'status': 'IN_EVALUATION', 'count': 6, 'refund_processed': False},
+        
+        # APPROVED con WALLET - Aprobadas y reembolsadas a billetera (10 devoluciones)
+        {'status': 'APPROVED', 'count': 10, 'refund_method': 'WALLET', 'refund_processed': True},
+        
+        # APPROVED con ORIGINAL - Aprobadas, reembolso a método original (5 devoluciones)
+        {'status': 'APPROVED', 'count': 5, 'refund_method': 'ORIGINAL', 'refund_processed': True},
+        
+        # REJECTED - Devoluciones rechazadas (6 devoluciones)
+        {'status': 'REJECTED', 'count': 6, 'refund_processed': False},
+        
+        # CANCELLED - Canceladas por el cliente (3 devoluciones)
+        {'status': 'CANCELLED', 'count': 3, 'refund_processed': False},
+    ]
     
-    for order in selected_orders:
-        # Seleccionar un item aleatorio de la orden
-        items = list(order.items.all())
-        if not items:
-            continue
-        
-        order_item = random.choice(items)
-        status = random.choice(statuses)
-        refund_method = random.choice(refund_methods)
-        reason_choice = random.choice(reason_choices)
-        description = random.choice(REASONS_FOR_RETURN)
-        
-        # Fecha de devolución (después de la entrega)
-        days_after_delivery = random.randint(1, 25)
-        created_at = order.created_at + timedelta(days=days_after_delivery)
-        
-        ret = Return.objects.create(
-            order=order,
-            product=order_item.product,
-            user=order.user,
-            reason=reason_choice,
-            description=description,
-            status=status,
-            refund_method=refund_method,
-            created_at=created_at,
-            updated_at=created_at
-        )
-        
-        # Si está aprobada, procesar reembolso
-        if status == 'APPROVED':
-            ret.refund_amount = order_item.price * order_item.quantity
-            ret.refund_processed = True
-            ret.save()
+    selected_orders = random.sample(valid_orders, min(38, len(valid_orders)))
+    order_index = 0
+    
+    for config in return_configs:
+        for i in range(config['count']):
+            if order_index >= len(selected_orders):
+                break
+                
+            order = selected_orders[order_index]
+            order_index += 1
             
-            # Crear/actualizar billetera si el método es WALLET
-            if refund_method == 'WALLET':
-                wallet, _ = Wallet.objects.get_or_create(
-                    user=order.user,
-                    defaults={'balance': Decimal('0')}
-                )
+            # Seleccionar un item aleatorio de la orden
+            items = list(order.items.all())
+            if not items:
+                continue
+            
+            order_item = random.choice(items)
+            status = config['status']
+            reason_choice = random.choice(reason_choices)
+            description = random.choice(REASONS_FOR_RETURN)
+            
+            # Determinar método de reembolso
+            if 'refund_method' in config:
+                refund_method = config['refund_method']
+            else:
+                refund_method = random.choice(['WALLET', 'ORIGINAL', 'BANK'])
+            
+            # Fecha de devolución (después de la entrega)
+            days_after_delivery = random.randint(1, 25)
+            created_at = order.created_at + timedelta(days=days_after_delivery)
+            
+            ret = Return.objects.create(
+                order=order,
+                product=order_item.product,
+                user=order.user,
+                reason=reason_choice,
+                description=description,
+                status=status,
+                refund_method=refund_method,
+                created_at=created_at,
+                updated_at=created_at
+            )
+            
+            # Si está aprobada, procesar reembolso
+            if status == 'APPROVED' and config.get('refund_processed', False):
+                ret.refund_amount = order_item.price * order_item.quantity
+                ret.refund_processed = True
+                ret.save()
                 
-                # Crear transacción
-                WalletTransaction.objects.create(
-                    wallet=wallet,
-                    transaction_type='REFUND',
-                    amount=ret.refund_amount,
-                    balance_after=wallet.balance + ret.refund_amount,
-                    status='COMPLETED',
-                    description=f"Reembolso por devolución #{ret.id} - {order_item.product.name}",
-                    reference_id=f"RETURN-{ret.id}"
-                )
-                
-                wallet.balance += ret.refund_amount
-                wallet.save()
-        
-        # Si está rechazada, agregar razón
-        if status == 'REJECTED':
-            rejection_reasons = [
-                "El producto está en perfectas condiciones",
-                "No cumple con la política de devoluciones",
-                "Producto usado más allá del uso normal",
-                "Plazo de devolución excedido",
-                "Daños causados por el usuario"
-            ]
-            ret.rejection_reason = random.choice(rejection_reasons)
-            ret.save()
-        
-        returns.append(ret)
-        
-        print(f"✅ Devolución #{ret.id} - {order.user.username} - {ret.get_status_display()}")
-        print(f"   Producto: {order_item.product.name} - Razón: {ret.get_reason_display()}")
-        if status == 'APPROVED' and refund_method == 'WALLET':
-            print(f"   💰 Reembolso: ${ret.refund_amount}")
+                # Crear/actualizar billetera si el método es WALLET
+                if refund_method == 'WALLET':
+                    wallet, _ = Wallet.objects.get_or_create(
+                        user=order.user,
+                        defaults={'balance': Decimal('0')}
+                    )
+                    
+                    # Crear transacción
+                    WalletTransaction.objects.create(
+                        wallet=wallet,
+                        transaction_type='REFUND',
+                        amount=ret.refund_amount,
+                        balance_after=wallet.balance + ret.refund_amount,
+                        status='COMPLETED',
+                        description=f"Reembolso por devolución #{ret.id} - {order_item.product.name}",
+                        reference_id=f"RETURN-{ret.id}"
+                    )
+                    
+                    wallet.balance += ret.refund_amount
+                    wallet.save()
+            
+            # Si está rechazada, agregar razón
+            if status == 'REJECTED':
+                rejection_reasons = [
+                    "El producto está en perfectas condiciones",
+                    "No cumple con la política de devoluciones",
+                    "Producto usado más allá del uso normal",
+                    "No se encontraron defectos en la evaluación",
+                    "Daños causados por mal uso del cliente"
+                ]
+                ret.rejection_reason = random.choice(rejection_reasons)
+                ret.save()
+            
+            # Si está en evaluación, agregar comentarios
+            if status == 'IN_EVALUATION':
+                ret.manager_comments = "Producto recibido en bodega. Se realizará evaluación física completa."
+                ret.save()
+            
+            returns.append(ret)
+            
+            status_emoji = {
+                'REQUESTED': '📝',
+                'IN_EVALUATION': '🔍',
+                'APPROVED': '✅',
+                'REJECTED': '❌',
+                'CANCELLED': '🚫'
+            }.get(status, '📋')
+            
+            print(f"{status_emoji} Devolución #{ret.id} - {order.user.username} - {ret.get_status_display()}")
+            print(f"   Producto: {order_item.product.name} - Razón: {ret.get_reason_display()}")
+            if status == 'APPROVED' and refund_method == 'WALLET':
+                print(f"   💰 Reembolso: ${ret.refund_amount}")
+            elif status == 'REJECTED':
+                print(f"   ⚠️  Razón rechazo: {ret.rejection_reason}")
     
     print(f"\n📊 Total devoluciones creadas: {len(returns)}")
+    print(f"   📝 REQUESTED: {len([r for r in returns if r.status == 'REQUESTED'])}")
+    print(f"   🔍 IN_EVALUATION: {len([r for r in returns if r.status == 'IN_EVALUATION'])}")
+    print(f"   ✅ APPROVED: {len([r for r in returns if r.status == 'APPROVED'])}")
+    print(f"   ❌ REJECTED: {len([r for r in returns if r.status == 'REJECTED'])}")
+    print(f"   🚫 CANCELLED: {len([r for r in returns if r.status == 'CANCELLED'])}")
+    
     return returns
 
 
@@ -485,40 +570,84 @@ def create_additional_wallet_transactions(users):
 
 
 def print_summary():
-    """Imprime resumen final"""
+    """Imprime resumen final detallado"""
     print("\n" + "="*80)
     print("RESUMEN FINAL DE POBLACIÓN")
     print("="*80)
     
-    print(f"\n📊 ESTADÍSTICAS:")
+    print(f"\n📊 ESTADÍSTICAS GENERALES:")
     print(f"   ├─ Categorías: {Category.objects.count()}")
     print(f"   ├─ Productos: {Product.objects.count()}")
     print(f"   ├─ Usuarios: {User.objects.count()}")
-    print(f"   │  ├─ Clientes: {User.objects.filter(role='CLIENTE').count()}")
-    print(f"   │  ├─ Managers: {User.objects.filter(role='MANAGER').count()}")
-    print(f"   │  └─ Admins: {User.objects.filter(role='ADMIN').count()}")
-    print(f"   ├─ Órdenes: {Order.objects.count()}")
-    print(f"   │  ├─ Entregadas: {Order.objects.filter(status='DELIVERED').count()}")
-    print(f"   │  ├─ En tránsito: {Order.objects.filter(status='IN_TRANSIT').count()}")
-    print(f"   │  └─ Pendientes: {Order.objects.filter(status='PENDING').count()}")
+    print(f"   │  ├─ 👤 Clientes: {User.objects.filter(role='CLIENTE').count()}")
+    print(f"   │  ├─ 👔 Managers: {User.objects.filter(role='MANAGER').count()}")
+    print(f"   │  └─ ⚙️  Admins: {User.objects.filter(role='ADMIN').count()}")
     print(f"   ├─ Items de órdenes: {OrderItem.objects.count()}")
-    print(f"   ├─ Devoluciones: {Return.objects.count()}")
-    print(f"   │  ├─ Solicitadas: {Return.objects.filter(status='REQUESTED').count()}")
-    print(f"   │  ├─ En evaluación: {Return.objects.filter(status='IN_EVALUATION').count()}")
-    print(f"   │  ├─ Aprobadas: {Return.objects.filter(status='APPROVED').count()}")
-    print(f"   │  └─ Rechazadas: {Return.objects.filter(status='REJECTED').count()}")
     print(f"   ├─ Billeteras: {Wallet.objects.count()}")
     print(f"   └─ Transacciones: {WalletTransaction.objects.count()}")
     
+    # Estadísticas de órdenes por estado
+    from django.utils import timezone
+    now = timezone.now()
+    print(f"\n🛒 ÓRDENES POR ESTADO (Total: {Order.objects.count()}):")
+    print(f"   ├─ 🟡 PENDING (Pendientes): {Order.objects.filter(status='PENDING').count()}")
+    print(f"   ├─ 🚚 SHIPPED (Enviadas): {Order.objects.filter(status='SHIPPED').count()}")
+    print(f"   ├─ ✅ DELIVERED (Entregadas): {Order.objects.filter(status='DELIVERED').count()}")
+    print(f"   │  ├─ 🟢 Dentro de 30 días (pueden devolver): {len([o for o in Order.objects.filter(status='DELIVERED') if (now - o.created_at).days <= 30])}")
+    print(f"   │  └─ 🔴 Fuera de ventana (>30 días): {len([o for o in Order.objects.filter(status='DELIVERED') if (now - o.created_at).days > 30])}")
+    print(f"   └─ ❌ CANCELLED (Canceladas): {Order.objects.filter(status='CANCELLED').count()}")
+    
+    # Estadísticas de devoluciones por estado
+    print(f"\n🔄 DEVOLUCIONES POR ESTADO (Total: {Return.objects.count()}):")
+    print(f"   ├─ 📝 REQUESTED (Esperando evaluación): {Return.objects.filter(status='REQUESTED').count()}")
+    print(f"   ├─ 🔍 IN_EVALUATION (En revisión física): {Return.objects.filter(status='IN_EVALUATION').count()}")
+    print(f"   ├─ ✅ APPROVED (Aprobadas y procesadas): {Return.objects.filter(status='APPROVED').count()}")
+    print(f"   │  ├─ 💰 Reembolsadas a WALLET: {Return.objects.filter(status='APPROVED', refund_method='WALLET').count()}")
+    print(f"   │  ├─ 💳 Reembolsadas a ORIGINAL: {Return.objects.filter(status='APPROVED', refund_method='ORIGINAL').count()}")
+    print(f"   │  └─ 🏦 Reembolsadas a BANK: {Return.objects.filter(status='APPROVED', refund_method='BANK').count()}")
+    print(f"   ├─ ❌ REJECTED (Rechazadas): {Return.objects.filter(status='REJECTED').count()}")
+    print(f"   └─ 🚫 CANCELLED (Canceladas por cliente): {Return.objects.filter(status='CANCELLED').count()}")
+    
+    # Estadísticas de razones de devolución
+    from django.db.models import Count
+    print(f"\n📋 RAZONES DE DEVOLUCIÓN:")
+    reasons = Return.objects.values('reason').annotate(count=Count('id')).order_by('-count')
+    reason_labels = {
+        'DEFECTIVE': 'Defectuoso',
+        'WRONG_ITEM': 'Producto incorrecto',
+        'NOT_AS_DESCRIBED': 'No coincide',
+        'CHANGED_MIND': 'Cambió de opinión',
+        'OTHER': 'Otra razón'
+    }
+    for reason in reasons:
+        label = reason_labels.get(reason['reason'], reason['reason'])
+        print(f"   • {label}: {reason['count']}")
+    
     # Estadísticas de billeteras
-    print(f"\n💰 BILLETERAS:")
+    print(f"\n💰 TOP 5 BILLETERAS CON MÁS SALDO:")
     wallets = Wallet.objects.all().order_by('-balance')[:5]
-    for wallet in wallets:
-        print(f"   • {wallet.user.username}: ${wallet.balance}")
+    for i, wallet in enumerate(wallets, 1):
+        print(f"   {i}. {wallet.user.username}: ${wallet.balance:,.2f}")
+    
+    # Estadísticas de transacciones
+    print(f"\n💳 TRANSACCIONES POR TIPO:")
+    from django.db.models import Sum
+    tx_types = WalletTransaction.objects.values('transaction_type').annotate(
+        count=Count('id'),
+        total=Sum('amount')
+    ).order_by('-count')
+    tx_labels = {
+        'REFUND': '💰 Reembolsos',
+        'DEPOSIT': '➕ Depósitos',
+        'WITHDRAWAL': '➖ Retiros',
+        'PURCHASE': '🛒 Compras'
+    }
+    for tx in tx_types:
+        label = tx_labels.get(tx['transaction_type'], tx['transaction_type'])
+        print(f"   {label}: {tx['count']} transacciones (${tx['total']:,.2f})")
     
     # Productos más vendidos
     print(f"\n🏆 TOP 5 PRODUCTOS MÁS VENDIDOS:")
-    from django.db.models import Sum, Count
     top_products = OrderItem.objects.values('product__name').annotate(
         total_sold=Sum('quantity'),
         orders_count=Count('order', distinct=True)
@@ -527,8 +656,22 @@ def print_summary():
     for i, prod in enumerate(top_products, 1):
         print(f"   {i}. {prod['product__name']}: {prod['total_sold']} unidades en {prod['orders_count']} órdenes")
     
+    # Clientes con más órdenes
+    print(f"\n👥 TOP 5 CLIENTES MÁS ACTIVOS:")
+    top_clients = Order.objects.values('user__username').annotate(
+        order_count=Count('id')
+    ).order_by('-order_count')[:5]
+    for i, client in enumerate(top_clients, 1):
+        print(f"   {i}. {client['user__username']}: {client['order_count']} órdenes")
+    
     print("\n" + "="*80)
     print("✅ POBLACIÓN COMPLETA FINALIZADA")
+    print("="*80)
+    print("\n📝 CREDENCIALES DE PRUEBA:")
+    print("   👤 Cliente: juan_cliente / password123")
+    print("   👔 Manager: carlos_manager / manager123")
+    print("   ⚙️  Admin: admin / admin123")
+    print("\n🚀 Para iniciar el servidor: python manage.py runserver")
     print("="*80)
 
 
