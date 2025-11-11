@@ -120,17 +120,30 @@ else:
 
 # Redis Cache Configuration
 # https://docs.djangoproject.com/en/5.2/topics/cache/
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-        'KEY_PREFIX': 'smartsales',
-        'TIMEOUT': 300,  # 5 minutos por defecto
+# Usar Redis si está disponible, si no usar cache en memoria (producción sin Redis)
+redis_url = config('REDIS_URL', default='')
+if redis_url:
+    # Producción con Redis (Render Redis addon)
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': redis_url,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'smartsales',
+            'TIMEOUT': 300,  # 5 minutos por defecto
+        }
     }
-}
+else:
+    # Desarrollo local o producción sin Redis - usar cache en memoria
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-smartsales',
+            'TIMEOUT': 300,
+        }
+    }
 
 # Cache time to live (en segundos)
 CACHE_TTL = 60 * 5  # 5 minutos
