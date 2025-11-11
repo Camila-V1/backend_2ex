@@ -28,13 +28,13 @@ def create_delivery_on_paid_order(sender, instance, created, **kwargs):
     if instance.status == Order.OrderStatus.PAID and not hasattr(instance, 'delivery'):
         # Obtener dirección del usuario (puedes personalizarlo)
         customer_address = getattr(instance.user, 'address', 'Dirección no especificada')
-        customer_phone = getattr(instance.user, 'phone_number', 'Teléfono no especificado')
+        customer_phone = getattr(instance.user, 'phone_number', 'Sin teléfono')
         
         # Crear el delivery
         Delivery.objects.create(
             order=instance,
             delivery_address=customer_address if customer_address else 'Dirección no especificada',
-            customer_phone=customer_phone if customer_phone else 'Teléfono no especificado',
+            customer_phone=customer_phone if customer_phone else 'Sin teléfono',
             status=Delivery.DeliveryStatus.PENDING,
             notes=f'Delivery creado automáticamente para orden #{instance.id}'
         )
