@@ -207,6 +207,27 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+# Simple JWT Configuration
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    # Token de acceso válido por 60 minutos (antes era 5 minutos por defecto)
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    # Token de refresco válido por 7 días
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    # Rotar refresh token al refrescar (más seguro)
+    'ROTATE_REFRESH_TOKENS': True,
+    # Agregar refresh token viejo a blacklist al rotar
+    'BLACKLIST_AFTER_ROTATION': True,
+    # Algoritmo de encriptación
+    'ALGORITHM': 'HS256',
+    # Tipo de token
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    # Nombre del campo de usuario en el token
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
 # Stripe Configuration
 import stripe
 
