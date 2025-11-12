@@ -43,60 +43,60 @@ CATEGORIES_DATA = [
 ]
 
 PRODUCTS_DATA = [
-    # Electrónica
-    {'name': 'Tablet iPad Air 10.9"', 'price': Decimal('5999.99'), 'stock': 25, 'description': 'Tablet Apple iPad Air con pantalla Liquid Retina de 10.9 pulgadas, chip M1, 64GB', 'category': 'Tablets'},
-    {'name': 'iPad Pro 12.9"', 'price': Decimal('12999.99'), 'stock': 15, 'description': 'iPad Pro con pantalla XDR de 12.9 pulgadas, chip M2, 256GB', 'category': 'Tablets'},
-    {'name': 'Samsung Galaxy Tab S9', 'price': Decimal('8499.99'), 'stock': 20, 'description': 'Tablet Samsung Galaxy Tab S9 11 pulgadas, 128GB, S Pen incluido', 'category': 'Tablets'},
+    # Tablets
+    {'name': 'Tablet iPad Air 10.9"', 'price': Decimal('5999.99'), 'stock': 25, 'description': 'Tablet Apple iPad Air con pantalla Liquid Retina de 10.9 pulgadas, chip M1, 64GB', 'category': 'Tablets', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_739444-MLA71782897015_092023-F.webp'},
+    {'name': 'iPad Pro 12.9"', 'price': Decimal('12999.99'), 'stock': 15, 'description': 'iPad Pro con pantalla XDR de 12.9 pulgadas, chip M2, 256GB', 'category': 'Tablets', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_618863-MLA74150448784_012024-F.webp'},
+    {'name': 'Samsung Galaxy Tab S9', 'price': Decimal('8499.99'), 'stock': 20, 'description': 'Tablet Samsung Galaxy Tab S9 11 pulgadas, 128GB, S Pen incluido', 'category': 'Tablets', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_905732-MLA71744925511_092023-F.webp'},
     
     # Computación
-    {'name': 'MacBook Pro 16"', 'price': Decimal('34999.99'), 'stock': 10, 'description': 'MacBook Pro 16 pulgadas, chip M3 Pro, 18GB RAM, 512GB SSD', 'category': 'Computación'},
-    {'name': 'Dell XPS 15', 'price': Decimal('24999.99'), 'stock': 12, 'description': 'Laptop Dell XPS 15, Intel i7-13700H, 16GB RAM, 512GB SSD, RTX 4050', 'category': 'Computación'},
-    {'name': 'Lenovo ThinkPad X1', 'price': Decimal('18999.99'), 'stock': 18, 'description': 'ThinkPad X1 Carbon Gen 11, Intel i7, 16GB RAM, 512GB SSD', 'category': 'Computación'},
-    {'name': 'ASUS ROG Zephyrus G14', 'price': Decimal('22999.99'), 'stock': 8, 'description': 'Laptop gamer ASUS ROG, Ryzen 9, RTX 4060, 32GB RAM, 1TB SSD', 'category': 'Gaming'},
+    {'name': 'MacBook Pro 16"', 'price': Decimal('34999.99'), 'stock': 10, 'description': 'MacBook Pro 16 pulgadas, chip M3 Pro, 18GB RAM, 512GB SSD', 'category': 'Computación', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_985281-MLA69930828539_062023-F.webp'},
+    {'name': 'Dell XPS 15', 'price': Decimal('24999.99'), 'stock': 12, 'description': 'Laptop Dell XPS 15, Intel i7-13700H, 16GB RAM, 512GB SSD, RTX 4050', 'category': 'Computación', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_692919-MLA46516512347_062021-F.webp'},
+    {'name': 'Lenovo ThinkPad X1', 'price': Decimal('18999.99'), 'stock': 18, 'description': 'ThinkPad X1 Carbon Gen 11, Intel i7, 16GB RAM, 512GB SSD', 'category': 'Computación', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_812093-MLU72668366344_112023-F.webp'},
+    {'name': 'ASUS ROG Zephyrus G14', 'price': Decimal('22999.99'), 'stock': 8, 'description': 'Laptop gamer ASUS ROG, Ryzen 9, RTX 4060, 32GB RAM, 1TB SSD', 'category': 'Gaming', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_623239-MLA53512617333_012023-F.webp'},
     
     # Smartphones
-    {'name': 'iPhone 15 Pro Max', 'price': Decimal('17999.99'), 'stock': 30, 'description': 'iPhone 15 Pro Max 256GB, Titanio Natural, A17 Pro', 'category': 'Smartphones'},
-    {'name': 'Samsung Galaxy S24 Ultra', 'price': Decimal('16999.99'), 'stock': 25, 'description': 'Galaxy S24 Ultra 256GB, S Pen incluido, Snapdragon 8 Gen 3', 'category': 'Smartphones'},
-    {'name': 'Google Pixel 8 Pro', 'price': Decimal('13999.99'), 'stock': 20, 'description': 'Pixel 8 Pro 256GB, Google Tensor G3, cámara de 50MP', 'category': 'Smartphones'},
-    {'name': 'Xiaomi 14 Pro', 'price': Decimal('9999.99'), 'stock': 35, 'description': 'Xiaomi 14 Pro 256GB, Snapdragon 8 Gen 3, Leica camera', 'category': 'Smartphones'},
+    {'name': 'iPhone 15 Pro Max', 'price': Decimal('17999.99'), 'stock': 30, 'description': 'iPhone 15 Pro Max 256GB, Titanio Natural, A17 Pro', 'category': 'Smartphones', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_762501-MLA71782897818_092023-F.webp'},
+    {'name': 'Samsung Galaxy S24 Ultra', 'price': Decimal('16999.99'), 'stock': 25, 'description': 'Galaxy S24 Ultra 256GB, S Pen incluido, Snapdragon 8 Gen 3', 'category': 'Smartphones', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_691282-MLA74877766796_032024-F.webp'},
+    {'name': 'Google Pixel 8 Pro', 'price': Decimal('13999.99'), 'stock': 20, 'description': 'Pixel 8 Pro 256GB, Google Tensor G3, cámara de 50MP', 'category': 'Smartphones', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_896559-MLU72761137749_112023-F.webp'},
+    {'name': 'Xiaomi 14 Pro', 'price': Decimal('9999.99'), 'stock': 35, 'description': 'Xiaomi 14 Pro 256GB, Snapdragon 8 Gen 3, Leica camera', 'category': 'Smartphones', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_638148-MLA73264780794_122023-F.webp'},
     
     # Audio
-    {'name': 'AirPods Pro 2', 'price': Decimal('3299.99'), 'stock': 50, 'description': 'AirPods Pro segunda generación con cancelación activa de ruido', 'category': 'Audio'},
-    {'name': 'Sony WH-1000XM5', 'price': Decimal('4999.99'), 'stock': 40, 'description': 'Audífonos over-ear con cancelación de ruido líder en la industria', 'category': 'Audio'},
-    {'name': 'Bose QuietComfort Ultra', 'price': Decimal('5499.99'), 'stock': 30, 'description': 'Audífonos premium Bose con audio espacial', 'category': 'Audio'},
-    {'name': 'JBL Flip 6', 'price': Decimal('1899.99'), 'stock': 60, 'description': 'Altavoz Bluetooth portátil resistente al agua', 'category': 'Audio'},
-    {'name': 'Sonos Arc', 'price': Decimal('12999.99'), 'stock': 15, 'description': 'Barra de sonido premium con Dolby Atmos', 'category': 'Audio'},
+    {'name': 'AirPods Pro 2', 'price': Decimal('3299.99'), 'stock': 50, 'description': 'AirPods Pro segunda generación con cancelación activa de ruido', 'category': 'Audio', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_619640-MLA52500052841_112022-F.webp'},
+    {'name': 'Sony WH-1000XM5', 'price': Decimal('4999.99'), 'stock': 40, 'description': 'Audífonos over-ear con cancelación de ruido líder en la industria', 'category': 'Audio', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_998870-MLA69769114899_062023-F.webp'},
+    {'name': 'Bose QuietComfort Ultra', 'price': Decimal('5499.99'), 'stock': 30, 'description': 'Audífonos premium Bose con audio espacial', 'category': 'Audio', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_675825-MLU72653297884_112023-F.webp'},
+    {'name': 'JBL Flip 6', 'price': Decimal('1899.99'), 'stock': 60, 'description': 'Altavoz Bluetooth portátil resistente al agua', 'category': 'Audio', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_619384-MLA47806724787_102021-F.webp'},
+    {'name': 'Sonos Arc', 'price': Decimal('12999.99'), 'stock': 15, 'description': 'Barra de sonido premium con Dolby Atmos', 'category': 'Audio', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_881976-MLA51620515197_092022-F.webp'},
     
     # Gaming
-    {'name': 'PlayStation 5 Slim', 'price': Decimal('8999.99'), 'stock': 25, 'description': 'Consola PS5 Slim con 1TB SSD', 'category': 'Gaming'},
-    {'name': 'Xbox Series X', 'price': Decimal('8499.99'), 'stock': 20, 'description': 'Consola Xbox Series X 1TB con 4K a 120fps', 'category': 'Gaming'},
-    {'name': 'Nintendo Switch OLED', 'price': Decimal('5499.99'), 'stock': 35, 'description': 'Switch OLED con pantalla de 7 pulgadas', 'category': 'Gaming'},
-    {'name': 'Steam Deck', 'price': Decimal('6999.99'), 'stock': 15, 'description': 'Consola portátil Steam Deck 512GB', 'category': 'Gaming'},
-    {'name': 'Logitech G Pro X Superlight', 'price': Decimal('2199.99'), 'stock': 45, 'description': 'Mouse gaming inalámbrico ultra ligero', 'category': 'Gaming'},
+    {'name': 'PlayStation 5 Slim', 'price': Decimal('8999.99'), 'stock': 25, 'description': 'Consola PS5 Slim con 1TB SSD', 'category': 'Gaming', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_672951-MLA46521041369_062021-F.webp'},
+    {'name': 'Xbox Series X', 'price': Decimal('8499.99'), 'stock': 20, 'description': 'Consola Xbox Series X 1TB con 4K a 120fps', 'category': 'Gaming', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_606169-MLA79278611140_092024-F.webp'},
+    {'name': 'Nintendo Switch OLED', 'price': Decimal('5499.99'), 'stock': 35, 'description': 'Switch OLED con pantalla de 7 pulgadas', 'category': 'Gaming', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_920126-MLA48020528635_102021-F.webp'},
+    {'name': 'Steam Deck', 'price': Decimal('6999.99'), 'stock': 15, 'description': 'Consola portátil Steam Deck 512GB', 'category': 'Gaming', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_782957-MLA52622747592_112022-F.webp'},
+    {'name': 'Logitech G Pro X Superlight', 'price': Decimal('2199.99'), 'stock': 45, 'description': 'Mouse gaming inalámbrico ultra ligero', 'category': 'Gaming', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_742838-MLA73695876442_122023-F.webp'},
     
     # Wearables
-    {'name': 'Apple Watch Series 9', 'price': Decimal('6499.99'), 'stock': 40, 'description': 'Apple Watch Series 9 45mm GPS + Cellular', 'category': 'Wearables'},
-    {'name': 'Samsung Galaxy Watch 6', 'price': Decimal('4999.99'), 'stock': 35, 'description': 'Galaxy Watch 6 44mm con sensor de salud avanzado', 'category': 'Wearables'},
-    {'name': 'Garmin Fenix 7', 'price': Decimal('8999.99'), 'stock': 20, 'description': 'Smartwatch deportivo con GPS multibanda', 'category': 'Wearables'},
-    {'name': 'Fitbit Charge 6', 'price': Decimal('2299.99'), 'stock': 50, 'description': 'Pulsera de actividad con monitor de frecuencia cardíaca', 'category': 'Wearables'},
+    {'name': 'Apple Watch Series 9', 'price': Decimal('6499.99'), 'stock': 40, 'description': 'Apple Watch Series 9 45mm GPS + Cellular', 'category': 'Wearables', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_651039-MLA71782902473_092023-F.webp'},
+    {'name': 'Samsung Galaxy Watch 6', 'price': Decimal('4999.99'), 'stock': 35, 'description': 'Galaxy Watch 6 44mm con sensor de salud avanzado', 'category': 'Wearables', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_997615-MLA69843390726_062023-F.webp'},
+    {'name': 'Garmin Fenix 7', 'price': Decimal('8999.99'), 'stock': 20, 'description': 'Smartwatch deportivo con GPS multibanda', 'category': 'Wearables', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_930535-MLU69579442782_052023-F.webp'},
+    {'name': 'Fitbit Charge 6', 'price': Decimal('2299.99'), 'stock': 50, 'description': 'Pulsera de actividad con monitor de frecuencia cardíaca', 'category': 'Wearables', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_698564-MLU73264828430_122023-F.webp'},
     
     # Fotografía
-    {'name': 'Canon EOS R6 Mark II', 'price': Decimal('34999.99'), 'stock': 8, 'description': 'Cámara mirrorless full-frame 24.2MP', 'category': 'Fotografía'},
-    {'name': 'Sony A7 IV', 'price': Decimal('32999.99'), 'stock': 10, 'description': 'Cámara mirrorless 33MP con video 4K 60fps', 'category': 'Fotografía'},
-    {'name': 'DJI Mini 4 Pro', 'price': Decimal('12999.99'), 'stock': 15, 'description': 'Drone compacto con cámara 4K HDR', 'category': 'Fotografía'},
-    {'name': 'GoPro Hero 12', 'price': Decimal('6999.99'), 'stock': 25, 'description': 'Cámara de acción 5.3K con estabilización', 'category': 'Fotografía'},
+    {'name': 'Canon EOS R6 Mark II', 'price': Decimal('34999.99'), 'stock': 8, 'description': 'Cámara mirrorless full-frame 24.2MP', 'category': 'Fotografía', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_885577-MLA54145594286_032023-F.webp'},
+    {'name': 'Sony A7 IV', 'price': Decimal('32999.99'), 'stock': 10, 'description': 'Cámara mirrorless 33MP con video 4K 60fps', 'category': 'Fotografía', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_921249-MLA48031067815_102021-F.webp'},
+    {'name': 'DJI Mini 4 Pro', 'price': Decimal('12999.99'), 'stock': 15, 'description': 'Drone compacto con cámara 4K HDR', 'category': 'Fotografía', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_637044-MLU72650949854_112023-F.webp'},
+    {'name': 'GoPro Hero 12', 'price': Decimal('6999.99'), 'stock': 25, 'description': 'Cámara de acción 5.3K con estabilización', 'category': 'Fotografía', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_947166-MLA71839869916_092023-F.webp'},
     
     # Hogar Inteligente
-    {'name': 'Amazon Echo Show 15', 'price': Decimal('4499.99'), 'stock': 30, 'description': 'Smart display de 15 pulgadas con Alexa', 'category': 'Hogar Inteligente'},
-    {'name': 'Google Nest Hub Max', 'price': Decimal('3299.99'), 'stock': 35, 'description': 'Pantalla inteligente con Google Assistant', 'category': 'Hogar Inteligente'},
-    {'name': 'Ring Video Doorbell Pro 2', 'price': Decimal('3999.99'), 'stock': 40, 'description': 'Timbre inteligente con video HD', 'category': 'Hogar Inteligente'},
-    {'name': 'Philips Hue Starter Kit', 'price': Decimal('2799.99'), 'stock': 45, 'description': 'Kit de iluminación inteligente con 3 focos', 'category': 'Hogar Inteligente'},
+    {'name': 'Amazon Echo Show 15', 'price': Decimal('4499.99'), 'stock': 30, 'description': 'Smart display de 15 pulgadas con Alexa', 'category': 'Hogar Inteligente', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_985607-MLA52663031733_122022-F.webp'},
+    {'name': 'Google Nest Hub Max', 'price': Decimal('3299.99'), 'stock': 35, 'description': 'Pantalla inteligente con Google Assistant', 'category': 'Hogar Inteligente', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_742657-MLA46095091555_052021-F.webp'},
+    {'name': 'Ring Video Doorbell Pro 2', 'price': Decimal('3999.99'), 'stock': 40, 'description': 'Timbre inteligente con video HD', 'category': 'Hogar Inteligente', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_826568-MLA46516570387_062021-F.webp'},
+    {'name': 'Philips Hue Starter Kit', 'price': Decimal('2799.99'), 'stock': 45, 'description': 'Kit de iluminación inteligente con 3 focos', 'category': 'Hogar Inteligente', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_949277-MLA45490695960_042021-F.webp'},
     
     # Accesorios
-    {'name': 'Anker PowerCore 20000', 'price': Decimal('899.99'), 'stock': 100, 'description': 'Batería externa 20000mAh con carga rápida', 'category': 'Accesorios'},
-    {'name': 'Cable USB-C Thunderbolt 4', 'price': Decimal('499.99'), 'stock': 150, 'description': 'Cable certificado Thunderbolt 4 2 metros', 'category': 'Accesorios'},
-    {'name': 'SanDisk Extreme Pro 1TB', 'price': Decimal('2199.99'), 'stock': 80, 'description': 'SSD externo portátil 1TB USB-C', 'category': 'Accesorios'},
-    {'name': 'Belkin BoostCharge Pro', 'price': Decimal('1299.99'), 'stock': 90, 'description': 'Cargador inalámbrico 3 en 1 MagSafe', 'category': 'Accesorios'},
+    {'name': 'Anker PowerCore 20000', 'price': Decimal('899.99'), 'stock': 100, 'description': 'Batería externa 20000mAh con carga rápida', 'category': 'Accesorios', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_965847-MLA43223619842_082020-F.webp'},
+    {'name': 'Cable USB-C Thunderbolt 4', 'price': Decimal('499.99'), 'stock': 150, 'description': 'Cable certificado Thunderbolt 4 2 metros', 'category': 'Accesorios', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_856492-MLA45490716152_042021-F.webp'},
+    {'name': 'SanDisk Extreme Pro 1TB', 'price': Decimal('2199.99'), 'stock': 80, 'description': 'SSD externo portátil 1TB USB-C', 'category': 'Accesorios', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_616529-MLA46511031003_062021-F.webp'},
+    {'name': 'Belkin BoostCharge Pro', 'price': Decimal('1299.99'), 'stock': 90, 'description': 'Cargador inalámbrico 3 en 1 MagSafe', 'category': 'Accesorios', 'image_url': 'https://http2.mlstatic.com/D_NQ_NP_2X_876234-MLA45490712048_042021-F.webp'},
 ]
 
 USERS_DATA = [
@@ -207,12 +207,14 @@ def create_products(categories):
                 'stock': prod_data['stock'],
                 'description': prod_data['description'],
                 'category': category,
+                'image_url': prod_data.get('image_url', ''),  # ✨ Imagen incluida desde el inicio
                 'is_active': True
             }
         )
         products.append(product)
         status = "✅ Creado" if created else "ℹ️  Ya existía"
-        print(f"{status}: {product.name} - ${product.price} (Stock: {product.stock})")
+        img_status = "🖼️" if prod_data.get('image_url') else "⚠️"
+        print(f"{status}: {product.name} {img_status} - ${product.price} (Stock: {product.stock})")
     
     print(f"\n📊 Total productos: {len(products)}")
     return products
@@ -679,149 +681,6 @@ def print_summary():
 # POBLACIÓN DE IMÁGENES DE PRODUCTOS
 # ============================================================================
 
-def populate_product_images():
-    """
-    Poblar las URLs de imágenes de productos desde URLs públicas
-    """
-    print("\n" + "="*80)
-    print("🖼️  POBLANDO IMÁGENES DE PRODUCTOS")
-    print("="*80)
-    
-    # Mapeo de productos a URLs de imágenes
-    PRODUCT_IMAGES = {
-        # Tablets
-        'Tablet iPad Air 10.9"': 'https://http2.mlstatic.com/D_NQ_NP_2X_739444-MLA71782897015_092023-F.webp',
-        'iPad Pro 12.9"': 'https://http2.mlstatic.com/D_NQ_NP_2X_618863-MLA74150448784_012024-F.webp',
-        'Samsung Galaxy Tab S9': 'https://http2.mlstatic.com/D_NQ_NP_2X_905732-MLA71744925511_092023-F.webp',
-        
-        # Computación
-        'Laptop Dell XPS 13': 'https://http2.mlstatic.com/D_NQ_NP_2X_692919-MLA46516512347_062021-F.webp',
-        'MacBook Air M2': 'https://http2.mlstatic.com/D_NQ_NP_2X_985281-MLA69930828539_062023-F.webp',
-        'Laptop HP Pavilion 15': 'https://http2.mlstatic.com/D_NQ_NP_2X_934214-MLA52525322107_112022-F.webp',
-        'Lenovo ThinkPad X1': 'https://http2.mlstatic.com/D_NQ_NP_2X_812093-MLU72668366344_112023-F.webp',
-        'ASUS ROG Zephyrus G14': 'https://http2.mlstatic.com/D_NQ_NP_2X_623239-MLA53512617333_012023-F.webp',
-        'Microsoft Surface Laptop 5': 'https://http2.mlstatic.com/D_NQ_NP_2X_734260-MLA52886185716_122022-F.webp',
-        
-        # Smartphones
-        'iPhone 15 Pro Max': 'https://http2.mlstatic.com/D_NQ_NP_2X_762501-MLA71782897818_092023-F.webp',
-        'Samsung Galaxy S24 Ultra': 'https://http2.mlstatic.com/D_NQ_NP_2X_691282-MLA74877766796_032024-F.webp',
-        'Google Pixel 8 Pro': 'https://http2.mlstatic.com/D_NQ_NP_2X_896559-MLU72761137749_112023-F.webp',
-        'Xiaomi 14 Pro': 'https://http2.mlstatic.com/D_NQ_NP_2X_638148-MLA73264780794_122023-F.webp',
-        'OnePlus 12': 'https://http2.mlstatic.com/D_NQ_NP_2X_889091-MLU74308855456_012024-F.webp',
-        'Motorola Edge 40 Pro': 'https://http2.mlstatic.com/D_NQ_NP_2X_767488-MLA70267336889_062023-F.webp',
-        
-        # Audio
-        'AirPods Pro 2': 'https://http2.mlstatic.com/D_NQ_NP_2X_619640-MLA52500052841_112022-F.webp',
-        'Sony WH-1000XM5': 'https://http2.mlstatic.com/D_NQ_NP_2X_998870-MLA69769114899_062023-F.webp',
-        'Bose QuietComfort Ultra': 'https://http2.mlstatic.com/D_NQ_NP_2X_675825-MLU72653297884_112023-F.webp',
-        'JBL Flip 6': 'https://http2.mlstatic.com/D_NQ_NP_2X_619384-MLA47806724787_102021-F.webp',
-        'Marshall Emberton II': 'https://http2.mlstatic.com/D_NQ_NP_2X_881976-MLA51620515197_092022-F.webp',
-        'Beats Studio Pro': 'https://http2.mlstatic.com/D_NQ_NP_2X_793568-MLU73260809226_122023-F.webp',
-        
-        # Gaming
-        'PlayStation 5': 'https://http2.mlstatic.com/D_NQ_NP_2X_672951-MLA46521041369_062021-F.webp',
-        'Xbox Series X': 'https://http2.mlstatic.com/D_NQ_NP_2X_606169-MLA79278611140_092024-F.webp',
-        'Nintendo Switch OLED': 'https://http2.mlstatic.com/D_NQ_NP_2X_920126-MLA48020528635_102021-F.webp',
-        'Steam Deck': 'https://http2.mlstatic.com/D_NQ_NP_2X_782957-MLA52622747592_112022-F.webp',
-        'Logitech G Pro X Superlight': 'https://http2.mlstatic.com/D_NQ_NP_2X_742838-MLA73695876442_122023-F.webp',
-        'Razer BlackWidow V4': 'https://http2.mlstatic.com/D_NQ_NP_2X_806956-MLU72533991169_112023-F.webp',
-        
-        # Wearables
-        'Apple Watch Series 9': 'https://http2.mlstatic.com/D_NQ_NP_2X_651039-MLA71782902473_092023-F.webp',
-        'Samsung Galaxy Watch 6': 'https://http2.mlstatic.com/D_NQ_NP_2X_997615-MLA69843390726_062023-F.webp',
-        'Garmin Fenix 7': 'https://http2.mlstatic.com/D_NQ_NP_2X_930535-MLU69579442782_052023-F.webp',
-        'Fitbit Charge 6': 'https://http2.mlstatic.com/D_NQ_NP_2X_698564-MLU73264828430_122023-F.webp',
-        'Xiaomi Smart Band 8': 'https://http2.mlstatic.com/D_NQ_NP_2X_897051-MLA70020619088_062023-F.webp',
-        
-        # Fotografía
-        'Canon EOS R6 Mark II': 'https://http2.mlstatic.com/D_NQ_NP_2X_885577-MLA54145594286_032023-F.webp',
-        'Sony Alpha 7 IV': 'https://http2.mlstatic.com/D_NQ_NP_2X_921249-MLA48031067815_102021-F.webp',
-        'Nikon Z8': 'https://http2.mlstatic.com/D_NQ_NP_2X_750143-MLA69824073718_062023-F.webp',
-        'Fujifilm X-T5': 'https://http2.mlstatic.com/D_NQ_NP_2X_875536-MLA52886127596_122022-F.webp',
-        'DJI Mini 4 Pro': 'https://http2.mlstatic.com/D_NQ_NP_2X_637044-MLU72650949854_112023-F.webp',
-        'GoPro Hero 12 Black': 'https://http2.mlstatic.com/D_NQ_NP_2X_947166-MLA71839869916_092023-F.webp',
-        
-        # Hogar Inteligente
-        'Amazon Echo Dot 5': 'https://http2.mlstatic.com/D_NQ_NP_2X_985607-MLA52663031733_122022-F.webp',
-        'Google Nest Hub Max': 'https://http2.mlstatic.com/D_NQ_NP_2X_742657-MLA46095091555_052021-F.webp',
-        'Ring Video Doorbell 4': 'https://http2.mlstatic.com/D_NQ_NP_2X_826568-MLA46516570387_062021-F.webp',
-        'Philips Hue Starter Kit': 'https://http2.mlstatic.com/D_NQ_NP_2X_949277-MLA45490695960_042021-F.webp',
-        'TP-Link Tapo C200': 'https://http2.mlstatic.com/D_NQ_NP_2X_658568-MLA47805855015_102021-F.webp',
-        'Roomba j7+': 'https://http2.mlstatic.com/D_NQ_NP_2X_745537-MLA50018837197_052022-F.webp',
-        
-        # Accesorios
-        'Anker PowerCore 26800': 'https://http2.mlstatic.com/D_NQ_NP_2X_965847-MLA43223619842_082020-F.webp',
-        'Samsung T7 1TB': 'https://http2.mlstatic.com/D_NQ_NP_2X_616529-MLA46511031003_062021-F.webp',
-        'SanDisk Extreme Pro 128GB': 'https://http2.mlstatic.com/D_NQ_NP_2X_743449-MLA46123138575_052021-F.webp',
-        'Belkin USB-C Hub': 'https://http2.mlstatic.com/D_NQ_NP_2X_834729-MLA46516562859_062021-F.webp',
-        'Apple Magic Keyboard': 'https://http2.mlstatic.com/D_NQ_NP_2X_977365-MLA46123138537_052021-F.webp',
-        'Logitech MX Master 3S': 'https://http2.mlstatic.com/D_NQ_NP_2X_661119-MLA51481673780_092022-F.webp',
-        
-        # Más productos
-        'Monitor LG UltraGear 27"': 'https://http2.mlstatic.com/D_NQ_NP_2X_881854-MLA48020512171_102021-F.webp',
-        'Teclado Mecánico Keychron K2': 'https://http2.mlstatic.com/D_NQ_NP_2X_894175-MLU72740044558_112023-F.webp',
-        'Webcam Logitech C920': 'https://http2.mlstatic.com/D_NQ_NP_2X_891628-MLA45490724152_042021-F.webp',
-        'Micrófono Blue Yeti': 'https://http2.mlstatic.com/D_NQ_NP_2X_983769-MLA43223628258_082020-F.webp',
-        'Tableta Gráfica Wacom': 'https://http2.mlstatic.com/D_NQ_NP_2X_767895-MLA45490728256_042021-F.webp',
-        'Cargador Inalámbrico Anker': 'https://http2.mlstatic.com/D_NQ_NP_2X_876234-MLA45490712048_042021-F.webp',
-        'Hub USB 3.0 7 Puertos': 'https://http2.mlstatic.com/D_NQ_NP_2X_734526-MLA43223623456_082020-F.webp',
-        'Cable HDMI 2.1 4K 2m': 'https://http2.mlstatic.com/D_NQ_NP_2X_856492-MLA45490716152_042021-F.webp',
-        'Adaptador USB-C a HDMI': 'https://http2.mlstatic.com/D_NQ_NP_2X_645378-MLA46516566963_062021-F.webp',
-        'Estuche Protector MacBook': 'https://http2.mlstatic.com/D_NQ_NP_2X_723894-MLA43223627354_082020-F.webp',
-        
-        # Gaming adicionales
-        'Control DualSense PS5': 'https://http2.mlstatic.com/D_NQ_NP_2X_969287-MLA46521045473_062021-F.webp',
-        'Silla Gamer DXRacer': 'https://http2.mlstatic.com/D_NQ_NP_2X_867345-MLA48020524279_102021-F.webp',
-        'Monitor Gaming ASUS ROG 32"': 'https://http2.mlstatic.com/D_NQ_NP_2X_745623-MLA51481677884_092022-F.webp',
-        'Auriculares HyperX Cloud II': 'https://http2.mlstatic.com/D_NQ_NP_2X_834567-MLA45490720256_042021-F.webp',
-        'Volante Logitech G923': 'https://http2.mlstatic.com/D_NQ_NP_2X_923456-MLA46516574971_062021-F.webp',
-        
-        # Audio adicionales
-        'Barra de Sonido Samsung Q800': 'https://http2.mlstatic.com/D_NQ_NP_2X_756234-MLA48020528747_102021-F.webp',
-        'Micrófono Shure SM7B': 'https://http2.mlstatic.com/D_NQ_NP_2X_867234-MLA51481681988_092022-F.webp',
-        'Interface de Audio Focusrite': 'https://http2.mlstatic.com/D_NQ_NP_2X_945623-MLA46516578075_062021-F.webp',
-        'Mezclador DJ Pioneer DDJ-400': 'https://http2.mlstatic.com/D_NQ_NP_2X_834567-MLA48020532851_102021-F.webp',
-        'Sintetizador Korg MicroKorg': 'https://http2.mlstatic.com/D_NQ_NP_2X_723456-MLA45490724360_042021-F.webp',
-        
-        # Electrónica adicional
-        'Kindle Paperwhite': 'https://http2.mlstatic.com/D_NQ_NP_2X_645234-MLA46516582179_062021-F.webp',
-        'Chromecast con Google TV': 'https://http2.mlstatic.com/D_NQ_NP_2X_834234-MLA48020536955_102021-F.webp',
-        'Fire TV Stick 4K Max': 'https://http2.mlstatic.com/D_NQ_NP_2X_756123-MLA51481686092_092022-F.webp',
-    }
-    
-    updated = 0
-    not_found = 0
-    
-    for product_name, image_url in PRODUCT_IMAGES.items():
-        try:
-            product = Product.objects.get(name=product_name)
-            product.image_url = image_url
-            product.save()
-            updated += 1
-            print(f"   ✅ {product_name}")
-        except Product.DoesNotExist:
-            not_found += 1
-            print(f"   ⚠️  No encontrado: {product_name}")
-        except Exception as e:
-            print(f"   ❌ Error en {product_name}: {e}")
-    
-    print(f"\n📊 Resumen:")
-    print(f"   Actualizados: {updated}")
-    print(f"   No encontrados: {not_found}")
-    print(f"   Total en mapeo: {len(PRODUCT_IMAGES)}")
-    
-    # Verificar productos sin imagen
-    products_without_image = Product.objects.filter(image_url__isnull=True) | Product.objects.filter(image_url='')
-    if products_without_image.exists():
-        print(f"\n⚠️  Productos sin imagen: {products_without_image.count()}")
-        for prod in products_without_image[:5]:
-            print(f"      - {prod.name}")
-    else:
-        print(f"\n✅ Todos los productos tienen imagen asignada!")
-    
-    print("="*80)
-
-
 # ============================================================================
 # FUNCIÓN PRINCIPAL
 # ============================================================================
@@ -853,13 +712,11 @@ def main():
     # Mostrar resumen
     print_summary()
     
-    # Poblar imágenes de productos
-    populate_product_images()
-    
     print("\n✅ Proceso completado exitosamente!")
+    print("🖼️  Las imágenes fueron asignadas automáticamente al crear los productos")
     print("\n📝 CREDENCIALES DE ACCESO:")
     print("   Cliente: juan_cliente / password123")
-    print("   Manager: carlos_manager / manager123")
+    print("   Manager: carlos_manager / carlos123")
     print("   Admin: admin / admin123")
 
 
