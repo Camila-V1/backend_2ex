@@ -676,6 +676,153 @@ def print_summary():
 
 
 # ============================================================================
+# POBLACIÓN DE IMÁGENES DE PRODUCTOS
+# ============================================================================
+
+def populate_product_images():
+    """
+    Poblar las URLs de imágenes de productos desde URLs públicas
+    """
+    print("\n" + "="*80)
+    print("🖼️  POBLANDO IMÁGENES DE PRODUCTOS")
+    print("="*80)
+    
+    # Mapeo de productos a URLs de imágenes
+    PRODUCT_IMAGES = {
+        # Tablets
+        'Tablet iPad Air 10.9"': 'https://http2.mlstatic.com/D_NQ_NP_2X_739444-MLA71782897015_092023-F.webp',
+        'iPad Pro 12.9"': 'https://http2.mlstatic.com/D_NQ_NP_2X_618863-MLA74150448784_012024-F.webp',
+        'Samsung Galaxy Tab S9': 'https://http2.mlstatic.com/D_NQ_NP_2X_905732-MLA71744925511_092023-F.webp',
+        
+        # Computación
+        'Laptop Dell XPS 13': 'https://http2.mlstatic.com/D_NQ_NP_2X_692919-MLA46516512347_062021-F.webp',
+        'MacBook Air M2': 'https://http2.mlstatic.com/D_NQ_NP_2X_985281-MLA69930828539_062023-F.webp',
+        'Laptop HP Pavilion 15': 'https://http2.mlstatic.com/D_NQ_NP_2X_934214-MLA52525322107_112022-F.webp',
+        'Lenovo ThinkPad X1': 'https://http2.mlstatic.com/D_NQ_NP_2X_812093-MLU72668366344_112023-F.webp',
+        'ASUS ROG Zephyrus G14': 'https://http2.mlstatic.com/D_NQ_NP_2X_623239-MLA53512617333_012023-F.webp',
+        'Microsoft Surface Laptop 5': 'https://http2.mlstatic.com/D_NQ_NP_2X_734260-MLA52886185716_122022-F.webp',
+        
+        # Smartphones
+        'iPhone 15 Pro Max': 'https://http2.mlstatic.com/D_NQ_NP_2X_762501-MLA71782897818_092023-F.webp',
+        'Samsung Galaxy S24 Ultra': 'https://http2.mlstatic.com/D_NQ_NP_2X_691282-MLA74877766796_032024-F.webp',
+        'Google Pixel 8 Pro': 'https://http2.mlstatic.com/D_NQ_NP_2X_896559-MLU72761137749_112023-F.webp',
+        'Xiaomi 14 Pro': 'https://http2.mlstatic.com/D_NQ_NP_2X_638148-MLA73264780794_122023-F.webp',
+        'OnePlus 12': 'https://http2.mlstatic.com/D_NQ_NP_2X_889091-MLU74308855456_012024-F.webp',
+        'Motorola Edge 40 Pro': 'https://http2.mlstatic.com/D_NQ_NP_2X_767488-MLA70267336889_062023-F.webp',
+        
+        # Audio
+        'AirPods Pro 2': 'https://http2.mlstatic.com/D_NQ_NP_2X_619640-MLA52500052841_112022-F.webp',
+        'Sony WH-1000XM5': 'https://http2.mlstatic.com/D_NQ_NP_2X_998870-MLA69769114899_062023-F.webp',
+        'Bose QuietComfort Ultra': 'https://http2.mlstatic.com/D_NQ_NP_2X_675825-MLU72653297884_112023-F.webp',
+        'JBL Flip 6': 'https://http2.mlstatic.com/D_NQ_NP_2X_619384-MLA47806724787_102021-F.webp',
+        'Marshall Emberton II': 'https://http2.mlstatic.com/D_NQ_NP_2X_881976-MLA51620515197_092022-F.webp',
+        'Beats Studio Pro': 'https://http2.mlstatic.com/D_NQ_NP_2X_793568-MLU73260809226_122023-F.webp',
+        
+        # Gaming
+        'PlayStation 5': 'https://http2.mlstatic.com/D_NQ_NP_2X_672951-MLA46521041369_062021-F.webp',
+        'Xbox Series X': 'https://http2.mlstatic.com/D_NQ_NP_2X_606169-MLA79278611140_092024-F.webp',
+        'Nintendo Switch OLED': 'https://http2.mlstatic.com/D_NQ_NP_2X_920126-MLA48020528635_102021-F.webp',
+        'Steam Deck': 'https://http2.mlstatic.com/D_NQ_NP_2X_782957-MLA52622747592_112022-F.webp',
+        'Logitech G Pro X Superlight': 'https://http2.mlstatic.com/D_NQ_NP_2X_742838-MLA73695876442_122023-F.webp',
+        'Razer BlackWidow V4': 'https://http2.mlstatic.com/D_NQ_NP_2X_806956-MLU72533991169_112023-F.webp',
+        
+        # Wearables
+        'Apple Watch Series 9': 'https://http2.mlstatic.com/D_NQ_NP_2X_651039-MLA71782902473_092023-F.webp',
+        'Samsung Galaxy Watch 6': 'https://http2.mlstatic.com/D_NQ_NP_2X_997615-MLA69843390726_062023-F.webp',
+        'Garmin Fenix 7': 'https://http2.mlstatic.com/D_NQ_NP_2X_930535-MLU69579442782_052023-F.webp',
+        'Fitbit Charge 6': 'https://http2.mlstatic.com/D_NQ_NP_2X_698564-MLU73264828430_122023-F.webp',
+        'Xiaomi Smart Band 8': 'https://http2.mlstatic.com/D_NQ_NP_2X_897051-MLA70020619088_062023-F.webp',
+        
+        # Fotografía
+        'Canon EOS R6 Mark II': 'https://http2.mlstatic.com/D_NQ_NP_2X_885577-MLA54145594286_032023-F.webp',
+        'Sony Alpha 7 IV': 'https://http2.mlstatic.com/D_NQ_NP_2X_921249-MLA48031067815_102021-F.webp',
+        'Nikon Z8': 'https://http2.mlstatic.com/D_NQ_NP_2X_750143-MLA69824073718_062023-F.webp',
+        'Fujifilm X-T5': 'https://http2.mlstatic.com/D_NQ_NP_2X_875536-MLA52886127596_122022-F.webp',
+        'DJI Mini 4 Pro': 'https://http2.mlstatic.com/D_NQ_NP_2X_637044-MLU72650949854_112023-F.webp',
+        'GoPro Hero 12 Black': 'https://http2.mlstatic.com/D_NQ_NP_2X_947166-MLA71839869916_092023-F.webp',
+        
+        # Hogar Inteligente
+        'Amazon Echo Dot 5': 'https://http2.mlstatic.com/D_NQ_NP_2X_985607-MLA52663031733_122022-F.webp',
+        'Google Nest Hub Max': 'https://http2.mlstatic.com/D_NQ_NP_2X_742657-MLA46095091555_052021-F.webp',
+        'Ring Video Doorbell 4': 'https://http2.mlstatic.com/D_NQ_NP_2X_826568-MLA46516570387_062021-F.webp',
+        'Philips Hue Starter Kit': 'https://http2.mlstatic.com/D_NQ_NP_2X_949277-MLA45490695960_042021-F.webp',
+        'TP-Link Tapo C200': 'https://http2.mlstatic.com/D_NQ_NP_2X_658568-MLA47805855015_102021-F.webp',
+        'Roomba j7+': 'https://http2.mlstatic.com/D_NQ_NP_2X_745537-MLA50018837197_052022-F.webp',
+        
+        # Accesorios
+        'Anker PowerCore 26800': 'https://http2.mlstatic.com/D_NQ_NP_2X_965847-MLA43223619842_082020-F.webp',
+        'Samsung T7 1TB': 'https://http2.mlstatic.com/D_NQ_NP_2X_616529-MLA46511031003_062021-F.webp',
+        'SanDisk Extreme Pro 128GB': 'https://http2.mlstatic.com/D_NQ_NP_2X_743449-MLA46123138575_052021-F.webp',
+        'Belkin USB-C Hub': 'https://http2.mlstatic.com/D_NQ_NP_2X_834729-MLA46516562859_062021-F.webp',
+        'Apple Magic Keyboard': 'https://http2.mlstatic.com/D_NQ_NP_2X_977365-MLA46123138537_052021-F.webp',
+        'Logitech MX Master 3S': 'https://http2.mlstatic.com/D_NQ_NP_2X_661119-MLA51481673780_092022-F.webp',
+        
+        # Más productos
+        'Monitor LG UltraGear 27"': 'https://http2.mlstatic.com/D_NQ_NP_2X_881854-MLA48020512171_102021-F.webp',
+        'Teclado Mecánico Keychron K2': 'https://http2.mlstatic.com/D_NQ_NP_2X_894175-MLU72740044558_112023-F.webp',
+        'Webcam Logitech C920': 'https://http2.mlstatic.com/D_NQ_NP_2X_891628-MLA45490724152_042021-F.webp',
+        'Micrófono Blue Yeti': 'https://http2.mlstatic.com/D_NQ_NP_2X_983769-MLA43223628258_082020-F.webp',
+        'Tableta Gráfica Wacom': 'https://http2.mlstatic.com/D_NQ_NP_2X_767895-MLA45490728256_042021-F.webp',
+        'Cargador Inalámbrico Anker': 'https://http2.mlstatic.com/D_NQ_NP_2X_876234-MLA45490712048_042021-F.webp',
+        'Hub USB 3.0 7 Puertos': 'https://http2.mlstatic.com/D_NQ_NP_2X_734526-MLA43223623456_082020-F.webp',
+        'Cable HDMI 2.1 4K 2m': 'https://http2.mlstatic.com/D_NQ_NP_2X_856492-MLA45490716152_042021-F.webp',
+        'Adaptador USB-C a HDMI': 'https://http2.mlstatic.com/D_NQ_NP_2X_645378-MLA46516566963_062021-F.webp',
+        'Estuche Protector MacBook': 'https://http2.mlstatic.com/D_NQ_NP_2X_723894-MLA43223627354_082020-F.webp',
+        
+        # Gaming adicionales
+        'Control DualSense PS5': 'https://http2.mlstatic.com/D_NQ_NP_2X_969287-MLA46521045473_062021-F.webp',
+        'Silla Gamer DXRacer': 'https://http2.mlstatic.com/D_NQ_NP_2X_867345-MLA48020524279_102021-F.webp',
+        'Monitor Gaming ASUS ROG 32"': 'https://http2.mlstatic.com/D_NQ_NP_2X_745623-MLA51481677884_092022-F.webp',
+        'Auriculares HyperX Cloud II': 'https://http2.mlstatic.com/D_NQ_NP_2X_834567-MLA45490720256_042021-F.webp',
+        'Volante Logitech G923': 'https://http2.mlstatic.com/D_NQ_NP_2X_923456-MLA46516574971_062021-F.webp',
+        
+        # Audio adicionales
+        'Barra de Sonido Samsung Q800': 'https://http2.mlstatic.com/D_NQ_NP_2X_756234-MLA48020528747_102021-F.webp',
+        'Micrófono Shure SM7B': 'https://http2.mlstatic.com/D_NQ_NP_2X_867234-MLA51481681988_092022-F.webp',
+        'Interface de Audio Focusrite': 'https://http2.mlstatic.com/D_NQ_NP_2X_945623-MLA46516578075_062021-F.webp',
+        'Mezclador DJ Pioneer DDJ-400': 'https://http2.mlstatic.com/D_NQ_NP_2X_834567-MLA48020532851_102021-F.webp',
+        'Sintetizador Korg MicroKorg': 'https://http2.mlstatic.com/D_NQ_NP_2X_723456-MLA45490724360_042021-F.webp',
+        
+        # Electrónica adicional
+        'Kindle Paperwhite': 'https://http2.mlstatic.com/D_NQ_NP_2X_645234-MLA46516582179_062021-F.webp',
+        'Chromecast con Google TV': 'https://http2.mlstatic.com/D_NQ_NP_2X_834234-MLA48020536955_102021-F.webp',
+        'Fire TV Stick 4K Max': 'https://http2.mlstatic.com/D_NQ_NP_2X_756123-MLA51481686092_092022-F.webp',
+    }
+    
+    updated = 0
+    not_found = 0
+    
+    for product_name, image_url in PRODUCT_IMAGES.items():
+        try:
+            product = Product.objects.get(name=product_name)
+            product.image_url = image_url
+            product.save()
+            updated += 1
+            print(f"   ✅ {product_name}")
+        except Product.DoesNotExist:
+            not_found += 1
+            print(f"   ⚠️  No encontrado: {product_name}")
+        except Exception as e:
+            print(f"   ❌ Error en {product_name}: {e}")
+    
+    print(f"\n📊 Resumen:")
+    print(f"   Actualizados: {updated}")
+    print(f"   No encontrados: {not_found}")
+    print(f"   Total en mapeo: {len(PRODUCT_IMAGES)}")
+    
+    # Verificar productos sin imagen
+    products_without_image = Product.objects.filter(image_url__isnull=True) | Product.objects.filter(image_url='')
+    if products_without_image.exists():
+        print(f"\n⚠️  Productos sin imagen: {products_without_image.count()}")
+        for prod in products_without_image[:5]:
+            print(f"      - {prod.name}")
+    else:
+        print(f"\n✅ Todos los productos tienen imagen asignada!")
+    
+    print("="*80)
+
+
+# ============================================================================
 # FUNCIÓN PRINCIPAL
 # ============================================================================
 
@@ -705,6 +852,9 @@ def main():
     
     # Mostrar resumen
     print_summary()
+    
+    # Poblar imágenes de productos
+    populate_product_images()
     
     print("\n✅ Proceso completado exitosamente!")
     print("\n📝 CREDENCIALES DE ACCESO:")
