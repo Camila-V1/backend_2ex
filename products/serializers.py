@@ -39,8 +39,8 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'name', 'description', 'price', 'stock',
-            'category', 'category_name', 'category_details', 'warranty_info', 
-            'is_active', 'average_rating', 'review_count'
+            'category', 'category_name', 'category_details', 'image_url',
+            'warranty_info', 'is_active', 'average_rating', 'review_count'
         ]
     
     @extend_schema_field(serializers.FloatField)
