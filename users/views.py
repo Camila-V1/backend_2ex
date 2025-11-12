@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from .models import CustomUser
 from .serializers import UserRegistrationSerializer, UserProfileSerializer
-from .permissions import IsAdminOrSelf
+from .permissions import IsAdminOrSelf, IsAdminOrManager
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -31,9 +31,9 @@ class UserViewSet(viewsets.ModelViewSet):
         # Permitimos que cualquiera pueda crear (registrarse)
         if self.action == 'create':
             self.permission_classes = [permissions.AllowAny]
-        # Para listar usuarios, solo administradores
+        # Para listar usuarios, administradores y managers
         elif self.action == 'list':
-            self.permission_classes = [permissions.IsAdminUser]
+            self.permission_classes = [IsAdminOrManager]
         # Para las demás acciones, requerimos que sea Admin o el propio usuario
         else:
             self.permission_classes = [IsAdminOrSelf]

@@ -4,7 +4,7 @@
 ║                    Base de Datos Poblada                       ║
 ╚════════════════════════════════════════════════════════════════╝
 
-📅 Generado: 2025-10-25 18:24:15
+📅 Generado: 2025-11-11 18:24:53
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -97,13 +97,13 @@
 📊 ESTADÍSTICAS DE LA BASE DE DATOS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✓ Usuarios: 12
-✓ Categorías: 8
-✓ Productos: 35
-✓ Reviews: 151
-✓ Órdenes: 167
-✓ Órdenes PAID (para ML): 138
-✓ Items en órdenes: 526
+✓ Usuarios: 21
+✓ Categorías: 12
+✓ Productos: 76
+✓ Reviews: 402
+✓ Órdenes: 164
+✓ Órdenes PAID (para ML): 126
+✓ Items en órdenes: 494
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -141,7 +141,7 @@ Authorization: Bearer <access_token>
 La base de datos ha sido poblada con suficientes datos para entrenar
 el modelo de predicción de ventas:
 
-✓ 138 órdenes PAID (mínimo requerido: 10)
+✓ 126 órdenes PAID (mínimo requerido: 10)
 ✓ Historial de 12 meses de ventas
 ✓ Múltiples productos y categorías
 

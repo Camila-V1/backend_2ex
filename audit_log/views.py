@@ -17,6 +17,7 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
+from users.permissions import IsAdminOrManager
 from .models import AuditLog
 from .serializers import AuditLogSerializer, AuditLogFilterSerializer
 
@@ -55,7 +56,7 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     
     queryset = AuditLog.objects.all()
     serializer_class = AuditLogSerializer
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrManager]
     pagination_class = AuditLogPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['description', 'path', 'error_message', 'username']

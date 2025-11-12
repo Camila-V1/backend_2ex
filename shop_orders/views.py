@@ -238,14 +238,14 @@ class StripeWebhookView(APIView):
 
 class AdminOrderViewSet(viewsets.ModelViewSet):
     """
-    ViewSet para administración completa de órdenes (solo admins)
+    ViewSet para administración completa de órdenes (solo admins y managers)
     - GET /api/admin/orders/ - Lista todas las órdenes
     - GET /api/admin/orders/{id}/ - Detalle de una orden
     - PATCH /api/admin/orders/{id}/ - Actualizar estado de orden
     - DELETE /api/admin/orders/{id}/ - Eliminar orden
     """
     serializer_class = OrderSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrManager]
     # Forzar que el lookup de detail use solo IDs numéricos para evitar colisiones
     # con rutas estáticas como 'dashboard' o 'users' que de otro modo podrían
     # coincidir con el patrón <pk> y producir 404.

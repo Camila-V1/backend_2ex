@@ -4,6 +4,8 @@ from rest_framework import permissions, status
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from datetime import datetime
+
+from users.permissions import CanViewReports
 import calendar
 import re
 from .services import (
@@ -136,7 +138,7 @@ class DynamicReportParserView(APIView):
     - "Muestra las ventas con nombres de clientes del mes pasado"
     - "Dame un reporte de compras por cliente con sus nombres"
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [CanViewReports]
     serializer_class = DynamicReportRequestSerializer
 
     def parse_prompt(self, prompt):
@@ -402,7 +404,7 @@ class SalesReportPreviewView(APIView):
     El frontend puede mostrar los datos en una tabla y luego el usuario
     decide si descargar en PDF o Excel usando el endpoint original.
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [CanViewReports]
     serializer_class = SalesReportPreviewSerializer
 
     def get(self, request, *args, **kwargs):
@@ -475,7 +477,7 @@ class ProductsReportPreviewView(APIView):
     """
     Vista para previsualizar datos de productos en JSON antes de descargar PDF/Excel.
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [CanViewReports]
     serializer_class = ProductsReportPreviewSerializer
 
     def get(self, request, *args, **kwargs):
@@ -524,7 +526,7 @@ class DynamicReportPreviewView(APIView):
     Interpreta el comando en lenguaje natural y retorna los datos en JSON
     para que el frontend pueda mostrarlos antes de descargar.
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [CanViewReports]
     serializer_class = DynamicReportPreviewSerializer
 
     def post(self, request, *args, **kwargs):

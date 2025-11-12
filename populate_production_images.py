@@ -1,6 +1,6 @@
 """
 Script para poblar imágenes en PRODUCCIÓN vía API
-REQUIERE: Token de administrador
+Usa credenciales admin por defecto
 """
 import requests
 import json
@@ -8,18 +8,46 @@ import json
 # Configuración
 PRODUCTION_URL = "https://backend-2ex-ecommerce.onrender.com/api/products/populate-images/"
 
+def get_admin_token():
+    """Obtener token de administrador automáticamente"""
+    print("\n🔑 Obteniendo token de administrador...")
+    
+    # Simple JWT usa /api/token/ y acepta username
+    login_url = "https://backend-2ex-ecommerce.onrender.com/api/token/"
+    
+    # Intentar con diferentes credenciales (username, NO email)
+    credentials_list = [
+        {"username": "admin", "password": "admin123"},
+        {"username": "superadmin", "password": "admin123"},
+        {"username": "admin", "password": "admin"},
+    ]
+    
+    for i, credentials in enumerate(credentials_list, 1):
+        try:
+            print(f"   Intento {i}/3: {credentials['username']}")
+            response = requests.post(login_url, json=credentials, timeout=30)
+            if response.status_code == 200:
+                token = response.json().get('access')
+                print(f"   ✅ Token obtenido con {credentials['username']}")
+                return token
+            else:
+                print(f"   ❌ Fallo: {response.status_code}")
+        except Exception as e:
+            print(f"   ❌ Error: {e}")
+    
+    print("\n❌ No se pudo obtener token con ninguna credencial")
+    return None
+
 def main():
     print("=" * 70)
     print("🖼️  POBLADOR DE IMÁGENES EN PRODUCCIÓN")
     print("=" * 70)
     
-    # Solicitar token
-    print("\n📝 Ingresa tu token de administrador:")
-    print("   (Obtenerlo de CREDENCIALES_SISTEMA.md o login como admin)")
-    token = input("Token: ").strip()
+    # Obtener token automáticamente
+    token = get_admin_token()
     
     if not token:
-        print("❌ Token requerido. Abortando.")
+        print("❌ No se pudo obtener el token. Abortando.")
         return
     
     # Preparar headers
