@@ -95,11 +95,13 @@ PRODUCT_IMAGES = {
     "El Principito": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=500",
     "Clean Code - Robert Martin": "https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=500",
     
-    # Moda (4)
+    # Moda (6)
     "Billetera de Cuero": "https://images.unsplash.com/photo-1627123424574-724758594e93?w=500",
     "Mochila Deportiva Under Armour": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500",
     "Gafas de Sol Ray-Ban": "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500",
     "Reloj Casio G-Shock": "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=500",
+    "Zapatillas Nike Air Max": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500",
+    "Zapatillas Adidas Ultraboost": "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=500",
     
     # Oficina (4)
     "Organizador Escritorio": "https://images.unsplash.com/photo-1611269154421-4e27233ac5c7?w=500",
