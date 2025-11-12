@@ -14,6 +14,8 @@ from rest_framework.decorators import api_view, permission_classes, action
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from .models import Order, OrderItem
+from users.permissions import IsAdminOrManager
+
 from .serializers import (
     OrderSerializer, OrderCreateSerializer,
     CheckoutSessionSerializer, StripeWebhookSerializer,
@@ -297,7 +299,7 @@ class AdminOrderViewSet(viewsets.ModelViewSet):
     tags=['Admin']
 )
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrManager])
 def admin_dashboard(request):
     """
     Dashboard con estadísticas para el administrador.
@@ -409,7 +411,7 @@ def admin_dashboard(request):
     tags=['Admin']
 )
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrManager])
 def admin_users_list(request):
     """
     Lista de todos los usuarios (excepto admins)
@@ -446,7 +448,7 @@ def admin_users_list(request):
     tags=['Admin']
 )
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrManager])
 def admin_sales_analytics(request):
     """
     Análisis detallado de ventas por día, semana, mes
