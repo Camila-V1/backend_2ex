@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'drf_spectacular',  # Documentación automática de API con Swagger
     'django_filters',  # Filtros avanzados para Django REST Framework
     'audit_log',  # Sistema de auditoría y bitácora
+    'fcm_django',  # Push notifications con Firebase Cloud Messaging
 ]
 
 MIDDLEWARE = [
@@ -416,3 +417,23 @@ ADMIN_EMAIL = config('ADMIN_EMAIL', default='admin@smartsales365.com')
 
 # Prefijo para asuntos de email
 EMAIL_SUBJECT_PREFIX = config('EMAIL_SUBJECT_PREFIX', default='[SmartSales365] ')
+
+
+# ==========================================
+# 📱 FIREBASE CLOUD MESSAGING (PUSH NOTIFICATIONS)
+# ==========================================
+
+# Ruta al archivo de credenciales de Firebase
+# Debe contener el JSON descargado de Firebase Console > Project Settings > Service Accounts
+FCM_DJANGO_SETTINGS = {
+    "APP_VERBOSE_NAME": "SmartSales365 E-commerce",
+    "FCM_SERVER_KEY": None,  # No se usa con firebase-admin
+    "ONE_DEVICE_PER_USER": False,  # Permitir múltiples dispositivos por usuario
+    "DELETE_INACTIVE_DEVICES": True,  # Eliminar tokens inválidos automáticamente
+}
+
+# Ruta al archivo de credenciales de Firebase (Service Account)
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase_credentials.json')
+
+# Inicialización de Firebase Admin (se hace en users/apps.py)
+FIREBASE_INITIALIZED = False

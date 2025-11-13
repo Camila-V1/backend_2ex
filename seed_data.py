@@ -605,26 +605,26 @@ def create_reviews(users, products):
     print_success(f"{reviews_count} reviews creadas")
 
 def create_orders(users, products):
-    """Crea órdenes de compra con suficientes datos para ML"""
-    print_info("Creando órdenes (datos para ML)...")
+    """Crea órdenes de compra con 4 meses de datos históricos para ML"""
+    print_info("Creando órdenes (4 meses de datos históricos)...")
     
     # Solo clientes
     customers = [u for u in users if not u.role]
     
-    # Crear órdenes de los últimos 12 meses para tener buen historial
+    # Crear órdenes de los últimos 4 meses (120 días)
     from django.utils import timezone
     end_date = timezone.now()
-    start_date = end_date - timedelta(days=365)
+    start_date = end_date - timedelta(days=120)
     
     orders_created = 0
     items_created = 0
     
-    # Crear entre 150-200 órdenes para tener suficientes datos
-    num_orders = random.randint(150, 200)
+    # Crear entre 300-400 órdenes para tener suficientes datos (4 meses)
+    num_orders = random.randint(300, 400)
     
     for i in range(num_orders):
-        # Fecha aleatoria en los últimos 12 meses
-        random_days = random.randint(0, 365)
+        # Fecha aleatoria en los últimos 4 meses (120 días)
+        random_days = random.randint(0, 120)
         order_date = end_date - timedelta(days=random_days)
         
         # Usuario aleatorio
@@ -819,7 +819,7 @@ La base de datos ha sido poblada con suficientes datos para entrenar
 el modelo de predicción de ventas:
 
 ✓ {} órdenes PAID (mínimo requerido: 10)
-✓ Historial de 12 meses de ventas
+✓ Historial de 4 meses de ventas (120 días)
 ✓ Múltiples productos y categorías
 
 Para entrenar el modelo:
@@ -839,7 +839,7 @@ Para obtener predicciones:
 
 ✓ Todas las contraseñas siguen el patrón: <nombre>123
 ✓ Los datos son generados aleatoriamente para pruebas
-✓ Las órdenes tienen fechas de los últimos 12 meses
+✓ Las órdenes tienen fechas de los últimos 4 meses (120 días)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

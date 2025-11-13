@@ -266,6 +266,13 @@ class DeliveryViewSet(viewsets.ModelViewSet):
             # Actualizar estado de la orden
             delivery.order.status = Order.OrderStatus.DELIVERED
             delivery.order.save()
+            
+            # ✅ Enviar notificación push al cliente
+            try:
+                from users.push_notification_service import PushNotificationService
+                PushNotificationService.send_order_delivered_notification(delivery.order.user, delivery.order)
+            except Exception as e:
+                print(f"⚠️  Error enviando notificación push al cliente: {str(e)}")
         elif new_status == Delivery.DeliveryStatus.FAILED:
             # Liberar al repartidor
             if delivery.delivery_person:
@@ -523,6 +530,13 @@ class ReturnViewSet(viewsets.ModelViewSet):
                 send_return_approved_notification(return_obj)
             except Exception as e:
                 print(f"⚠️  Error enviando email al cliente: {str(e)}")
+            
+            # ✅ Enviar notificación push al cliente
+            try:
+                from users.push_notification_service import PushNotificationService
+                PushNotificationService.send_return_approved_notification(return_obj.order.user, return_obj)
+            except Exception as e:
+                print(f"⚠️  Error enviando notificación push al cliente: {str(e)}")
         else:
             # Si el reembolso falló, mantener en APPROVED pero no COMPLETED
             print(f"⚠️  Devolución aprobada pero reembolso falló: {refund_message}")
@@ -574,6 +588,13 @@ class ReturnViewSet(viewsets.ModelViewSet):
             send_return_rejected_notification(return_obj)
         except Exception as e:
             print(f"⚠️  Error enviando email al cliente: {str(e)}")
+        
+        # ✅ Enviar notificación push al cliente
+        try:
+            from users.push_notification_service import PushNotificationService
+            PushNotificationService.send_return_rejected_notification(return_obj.order.user, return_obj)
+        except Exception as e:
+            print(f"⚠️  Error enviando notificación push al cliente: {str(e)}")
         
         serializer = self.get_serializer(return_obj)
         return Response({

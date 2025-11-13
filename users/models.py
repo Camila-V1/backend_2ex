@@ -24,3 +24,6 @@ class CustomUser(AbstractUser):
 
 # Importar modelos de billetera
 from .wallet_models import Wallet, WalletTransaction
+
+# Importar modelos de tokens de dispositivos para notificaciones push
+from .device_token_models import DeviceToken, NotificationLog
