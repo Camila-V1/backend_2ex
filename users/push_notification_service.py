@@ -124,7 +124,7 @@ class PushNotificationService:
         # Enviar a cada token
         for token in tokens:
             try:
-                # Crear mensaje
+                # Crear mensaje con formato idéntico a Firebase Console
                 message = messaging.Message(
                     notification=messaging.Notification(
                         title=title,
@@ -135,15 +135,23 @@ class PushNotificationService:
                     android=messaging.AndroidConfig(
                         priority='high',
                         notification=messaging.AndroidNotification(
+                            title=title,  # ⭐ Agregar título explícitamente para Android
+                            body=body,    # ⭐ Agregar body explícitamente para Android
                             sound='default',
                             click_action='FLUTTER_NOTIFICATION_CLICK',
+                            channel_id='high_importance_channel',  # ⭐ Canal de notificaciones Android
                         ),
                     ),
                     apns=messaging.APNSConfig(
                         payload=messaging.APNSPayload(
                             aps=messaging.Aps(
+                                alert=messaging.ApsAlert(
+                                    title=title,  # ⭐ Agregar título explícitamente para iOS
+                                    body=body,    # ⭐ Agregar body explícitamente para iOS
+                                ),
                                 sound='default',
                                 content_available=True,
+                                badge=1,
                             ),
                         ),
                     ),
