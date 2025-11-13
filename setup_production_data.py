@@ -9,6 +9,15 @@ EJECUTAR EN RENDER:
 3. Ejecutar
 """
 
+import os
+import sys
+import django
+
+# Setup Django ANTES de importar modelos
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ecommerce_api.settings')
+django.setup()
+
 import random
 from datetime import datetime, timedelta
 from decimal import Decimal
