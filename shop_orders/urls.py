@@ -5,6 +5,7 @@ from .views import (
     OrderViewSet, 
     CreateOrderView, 
     CreateCheckoutSessionView, 
+    CreatePaymentIntentView,
     StripeWebhookView,
     AdminOrderViewSet,
     admin_dashboard,
@@ -28,6 +29,9 @@ urlpatterns = [
     path('create/', CreateOrderView.as_view(), name='create-order'),
     path('<int:order_id>/create-checkout-session/', CreateCheckoutSessionView.as_view(), name='create-checkout-session'),
     path('stripe-webhook/', StripeWebhookView.as_view(), name='stripe-webhook'),
+    
+    # 📱 NUEVO: Payment Intent para app móvil (Flutter)
+    path('create-payment-intent/', CreatePaymentIntentView.as_view(), name='create-payment-intent'),
     
     # 🧾 REDIRECT: Mantener compatibilidad con endpoint antiguo de invoice
     path('<int:order_id>/invoice/', RedirectView.as_view(url='/api/reports/orders/%(order_id)s/invoice/', permanent=True), name='order-invoice-redirect'),

@@ -164,6 +164,117 @@ class CreateCheckoutSessionView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class CreatePaymentIntentView(APIView):
+    """
+    📱 Crea un PaymentIntent de Stripe para uso en SDK móvil (Flutter).
+    
+    Este endpoint está diseñado para apps móviles que usan el Stripe SDK nativo.
+    En lugar de crear una sesión de checkout web, crea un PaymentIntent que
+    puede ser usado con Stripe.instance.presentPaymentSheet() en Flutter.
+    
+    Request:
+        POST /api/orders/create-payment-intent/
+        Body: {
+            "order_id": int,           # ID de la orden existente (PENDING)
+            "currency": "usd"          # Opcional, por defecto "usd"
+        }
+    
+    Response:
+        {
+            "client_secret": string,   # Para inicializar el payment sheet
+            "publishable_key": string, # Clave pública de Stripe
+            "customer_id": string,     # ID del customer de Stripe (opcional)
+            "ephemeral_key": string    # Para autenticación (opcional)
+        }
+    
+    Uso en Flutter:
+        1. Llamar a este endpoint para obtener client_secret
+        2. Inicializar payment sheet con Stripe.instance.initPaymentSheet()
+        3. Mostrar sheet con Stripe.instance.presentPaymentSheet()
+        4. El webhook confirmará el pago y actualizará la orden
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            # 1. Obtener datos de la request
+            order_id = request.data.get('order_id')
+            currency = request.data.get('currency', 'usd')
+            
+            if not order_id:
+                return Response(
+                    {'error': 'order_id es requerido'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # 2. Verificar que la orden existe y pertenece al usuario
+            try:
+                order = Order.objects.get(
+                    id=order_id, 
+                    user=request.user, 
+                    status=Order.OrderStatus.PENDING
+                )
+            except Order.DoesNotExist:
+                return Response(
+                    {'error': 'Orden no encontrada o ya ha sido procesada'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # 3. Calcular el monto total en centavos
+            total_amount = int(order.total_price * 100)
+            
+            if total_amount <= 0:
+                return Response(
+                    {'error': 'El monto de la orden debe ser mayor a 0'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # 4. Crear descripción de los items
+            items_description = ', '.join([
+                f"{item.product.name} x{item.quantity}" 
+                for item in order.items.all()[:3]  # Limitar a 3 items para la descripción
+            ])
+            if order.items.count() > 3:
+                items_description += f' (+{order.items.count() - 3} más)'
+            
+            # 5. Crear el Payment Intent en Stripe
+            payment_intent = stripe.PaymentIntent.create(
+                amount=total_amount,
+                currency=currency,
+                description=f'Orden #{order.id}: {items_description}',
+                metadata={
+                    'order_id': str(order.id),
+                    'user_id': str(request.user.id),
+                    'username': request.user.username,
+                    'integration_check': 'mobile_payment_intent_v1'
+                },
+                # Configuración recomendada para mobile
+                automatic_payment_methods={
+                    'enabled': True,
+                },
+            )
+            
+            # 6. Devolver el client_secret y datos necesarios para Flutter
+            return Response({
+                'client_secret': payment_intent.client_secret,
+                'publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
+                'order_id': order.id,
+                'amount': total_amount,
+                'currency': currency,
+            }, status=status.HTTP_200_OK)
+            
+        except stripe.error.StripeError as e:
+            return Response(
+                {'error': f'Error de Stripe: {str(e)}'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Error interno: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
 class StripeWebhookView(APIView):
     """
     Escucha los eventos de Stripe. Específicamente, cuando una sesión de checkout se completa,
@@ -192,14 +303,9 @@ class StripeWebhookView(APIView):
             # Firma inválida
             return Response({'error': 'Invalid signature'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Manejar el evento checkout.session.completed
-        if event['type'] == 'checkout.session.completed':
-            session = event['data']['object']
-            order_id = session.get('metadata', {}).get('order_id')
-            
-            if order_id is None:
-                return Response({'error': 'Falta order_id en los metadatos de Stripe'}, status=status.HTTP_400_BAD_REQUEST)
-
+        # Función auxiliar para procesar el pago de una orden
+        def process_order_payment(order_id):
+            """Procesa el pago de una orden: reduce stock y actualiza estado"""
             try:
                 order = Order.objects.get(id=order_id)
                 # Verificar que la orden no esté ya pagada para evitar reprocesarla
@@ -225,8 +331,30 @@ class StripeWebhookView(APIView):
                     # Cambiar estado a PAID después de reducir stock
                     order.status = Order.OrderStatus.PAID
                     order.save()
+                    return Response(status=status.HTTP_200_OK)
+                return Response(status=status.HTTP_200_OK)
             except Order.DoesNotExist:
                 return Response({'error': 'Orden no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Manejar el evento checkout.session.completed (para pagos web)
+        if event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
+            order_id = session.get('metadata', {}).get('order_id')
+            
+            if order_id is None:
+                return Response({'error': 'Falta order_id en los metadatos de Stripe'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return process_order_payment(order_id)
+        
+        # 📱 Manejar el evento payment_intent.succeeded (para pagos móviles con Payment Intent)
+        elif event['type'] == 'payment_intent.succeeded':
+            payment_intent = event['data']['object']
+            order_id = payment_intent.get('metadata', {}).get('order_id')
+            
+            if order_id is None:
+                return Response({'error': 'Falta order_id en los metadatos del PaymentIntent'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return process_order_payment(order_id)
 
         return Response(status=status.HTTP_200_OK)
 
