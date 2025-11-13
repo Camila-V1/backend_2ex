@@ -318,6 +318,106 @@ def create_categories():
     
     return categories
 
+def populate_product_images():
+    """
+    Pobla las imágenes de productos usando URLs externas.
+    Se ejecuta después de crear productos para asignarles imágenes.
+    """
+    print_info("Poblando imágenes de productos...")
+    
+    # URLs de imágenes por categoría (usando CDNs públicos que NO requieren API key)
+    image_urls = {
+        'Electrónica': [
+            'https://th.bing.com/th/id/OIP.8xQ7h6FrE5YFQZE-HmN0jwHaE8?w=500',
+            'https://th.bing.com/th/id/OIP.Q9Y4o8FJxZBkMZLZ-HmN0jwHaE8?w=500',
+            'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=500',
+            'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=500',
+        ],
+        'Computadoras': [
+            'https://th.bing.com/th/id/OIP.mOO_1xJmfXBbZYYS_kmbewHaE8?w=500',
+            'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500',
+            'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500',
+            'https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=500',
+        ],
+        'Celulares': [
+            'https://th.bing.com/th/id/OIP.L3xI2xJmfXBbZYYS_kmbewHaE8?w=500',
+            'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500',
+            'https://images.unsplash.com/photo-1592286927505-e7809d7c5459?w=500',
+            'https://http2.mlstatic.com/D_NQ_NP_2X_881142-MLM69837434652_062023-F.webp',
+        ],
+        'Audio': [
+            'https://th.bing.com/th/id/OIP.8xQ7h6FrE5YFQZE-HmN0jwHaE8?w=500',
+            'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
+            'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500',
+            'https://http2.mlstatic.com/D_NQ_NP_2X_767890-MLM52492938653_112022-F.webp',
+        ],
+        'Gaming': [
+            'https://th.bing.com/th/id/OIP.a8Y4o8FJxZBkMZLZ-HmN0jwHaE8?w=500',
+            'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=500',
+            'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=500',
+            'https://http2.mlstatic.com/D_NQ_NP_2X_958741-MLM45280176831_032021-F.webp',
+        ],
+        'Hogar': [
+            'https://th.bing.com/th/id/OIP.e5FBiTc72IPZnxd2VT6IhwHaE8?w=500',
+            'https://images.unsplash.com/photo-1585659722983-3a675dabf23d?w=500',
+            'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=500',
+            'https://http2.mlstatic.com/D_NQ_NP_2X_623445-MLM51234567890_082022-F.webp',
+        ],
+        'Oficina': [
+            'https://th.bing.com/th/id/OIP.c5FBiTc72IPZnxd2VT6IhwHaE8?w=500',
+            'https://images.unsplash.com/photo-1589994965851-a8f479c573a9?w=500',
+            'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=500',
+            'https://http2.mlstatic.com/D_NQ_NP_2X_789012-MLM50123456789_052022-F.webp',
+        ],
+        'Deportes': [
+            'https://th.bing.com/th/id/OIP.d5FBiTc72IPZnxd2VT6IhwHaE8?w=500',
+            'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500',
+            'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=500',
+            'https://http2.mlstatic.com/D_NQ_NP_2X_456789-MLM49876543210_052022-F.webp',
+        ],
+        'Fotografía': [
+            'https://th.bing.com/th/id/OIP.f5FBiTc72IPZnxd2VT6IhwHaE8?w=500',
+            'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=500',
+            'https://images.unsplash.com/photo-1606982197448-99c1367193d0?w=500',
+            'https://http2.mlstatic.com/D_NQ_NP_2X_345678-MLM48765432109_032022-F.webp',
+        ],
+        'Moda': [
+            'https://th.bing.com/th/id/OIP.g5FBiTc72IPZnxd2VT6IhwHaE8?w=500',
+            'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=500',
+            'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=500',
+            'https://http2.mlstatic.com/D_NQ_NP_2X_234567-MLM47654321098_022022-F.webp',
+        ],
+        'Libros': [
+            'https://th.bing.com/th/id/OIP.h5FBiTc72IPZnxd2VT6IhwHaE8?w=500',
+            'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500',
+            'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500',
+            'https://http2.mlstatic.com/D_NQ_NP_2X_123456-MLM46543210987_012022-F.webp',
+        ],
+        'Juguetes': [
+            'https://th.bing.com/th/id/OIP.i5FBiTc72IPZnxd2VT6IhwHaE8?w=500',
+            'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500',
+            'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=500',
+            'https://http2.mlstatic.com/D_NQ_NP_2X_012345-MLM45432109876_012022-F.webp',
+        ],
+    }
+    
+    products = Product.objects.all()
+    images_updated = 0
+    
+    for product in products:
+        category_name = product.category.name
+        
+        # Obtener URLs disponibles para esta categoría
+        urls = image_urls.get(category_name, image_urls['Electrónica'])
+        
+        # Asignar una URL aleatoria a cada producto
+        import random
+        product.image_url = random.choice(urls)
+        product.save()
+        images_updated += 1
+    
+    print_success(f"{images_updated} imágenes asignadas a productos")
+
 def create_products(categories):
     """Crea productos variados"""
     print_info("Creando productos...")
@@ -791,6 +891,10 @@ def main():
         
         # 4. Crear productos
         products = create_products(categories)
+        print()
+        
+        # 4.5 Poblar imágenes de productos
+        populate_product_images()
         print()
         
         # 5. Crear reviews
