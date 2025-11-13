@@ -55,6 +55,10 @@ class CreateOrderView(APIView):
     """
     Vista para crear una nueva orden a partir del carrito de compras.
     Permisos: CAJERO, MANAGER o ADMIN pueden crear órdenes.
+    
+    Soporta dos métodos de pago:
+    - Stripe: Crea orden en PENDING, se procesa con webhook
+    - Wallet: Paga inmediatamente con billetera virtual
     """
     permission_classes = [permissions.IsAuthenticated]  # Cualquier usuario autenticado puede crear órdenes
     serializer_class = OrderCreateSerializer
@@ -65,6 +69,7 @@ class CreateOrderView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         cart_items = serializer.validated_data['items']
+        payment_method = request.data.get('payment_method', 'stripe')  # 'stripe' o 'wallet'
         
         try:
             # Usamos una transacción para asegurar que todas las operaciones de BD 
@@ -90,18 +95,64 @@ class CreateOrderView(APIView):
                         quantity=quantity,
                         price=product.price  # Guardamos el precio actual del producto
                     )
-                    
-                    # NO reducir stock aquí - se hará cuando el webhook de Stripe confirme el pago
 
                     total_order_price += order_item.price * order_item.quantity
                 
-                # 5. Actualizar el precio total de la orden
+                # 4. Actualizar el precio total de la orden
                 order.total_price = total_order_price
                 order.save()
 
+                # 5. SI EL PAGO ES CON BILLETERA, PROCESARLO INMEDIATAMENTE
+                if payment_method == 'wallet':
+                    try:
+                        from users.wallet_models import Wallet, WalletTransaction
+                        
+                        # Obtener o crear billetera del usuario
+                        wallet, created = Wallet.objects.get_or_create(user=request.user)
+                        
+                        # Verificar saldo suficiente
+                        if wallet.balance < order.total_price:
+                            raise ValueError(
+                                f"Saldo insuficiente. Necesitas ${order.total_price}, tienes ${wallet.balance}"
+                            )
+                        
+                        # Deducir fondos de la billetera
+                        wallet.deduct_funds(
+                            amount=order.total_price,
+                            transaction_type=WalletTransaction.TransactionType.PURCHASE,
+                            description=f"Compra - Orden #{order.id}",
+                            reference_id=str(order.id)
+                        )
+                        
+                        # Actualizar estado de la orden a PAID
+                        order.status = Order.OrderStatus.PAID
+                        order.save()
+                        
+                        # Reducir stock de los productos
+                        for item in order.items.all():
+                            product = item.product
+                            product.stock -= item.quantity
+                            product.save()
+                        
+                        print(f"✅ Orden #{order.id} pagada con billetera. Saldo restante: ${wallet.balance}")
+                    
+                    except ValueError as e:
+                        # Error de saldo insuficiente o validación
+                        raise ValueError(str(e))
+                    except Exception as e:
+                        print(f"❌ Error procesando pago con billetera: {str(e)}")
+                        raise ValueError(f"Error procesando pago con billetera: {str(e)}")
+
             # Devolver la orden creada y serializada
             final_order_serializer = OrderSerializer(order)
-            return Response(final_order_serializer.data, status=status.HTTP_201_CREATED)
+            response_data = final_order_serializer.data
+            
+            # Agregar información adicional si fue pago con billetera
+            if payment_method == 'wallet':
+                response_data['paid_with_wallet'] = True
+                response_data['message'] = 'Orden pagada exitosamente con billetera virtual'
+            
+            return Response(response_data, status=status.HTTP_201_CREATED)
         
         except Product.DoesNotExist:
             return Response({"error": "Uno de los productos no fue encontrado."}, status=status.HTTP_404_NOT_FOUND)
