@@ -21,5 +21,14 @@ echo "🌱 Repoblando base de datos con datos iniciales..."
 # Ejecutar seed_data.py siempre después de limpiar
 python seed_data.py
 
+echo "📊 Generando datos históricos realistas para ML..."
+# Generar 60 días de datos con patrones realistas
+python setup_production_data.py
+
+echo "🤖 Entrenando modelo de predicción de ventas..."
+# Entrenar el modelo ML con los datos generados
+python manage.py train_sales_model
+
 echo "✅ Deploy completado exitosamente!"
 echo "📊 Base de datos limpia y repoblada con datos frescos"
+echo "🎯 Modelo ML entrenado y listo para predicciones"
