@@ -32,3 +32,4 @@ python manage.py train_sales_model
 echo "✅ Deploy completado exitosamente!"
 echo "📊 Base de datos limpia y repoblada con datos frescos"
 echo "🎯 Modelo ML entrenado y listo para predicciones"
+echo "📱 Notificaciones push activadas - Deploy: 2025-11-13 11:15"
