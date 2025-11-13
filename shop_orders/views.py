@@ -437,6 +437,8 @@ class AdminOrderViewSet(viewsets.ModelViewSet):
         Endpoint especial para cambiar el estado de una orden
         POST /api/admin/orders/{id}/update_status/
         Body: {"status": "PAID"} o {"status": "paid"} (case-insensitive)
+        
+        📱 Envía notificación push al cliente cuando cambia el estado
         """
         order = self.get_object()
         new_status = request.data.get('status')
@@ -465,8 +467,31 @@ class AdminOrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Guardar estado anterior para comparación
+        old_status = order.status
+        
         order.status = new_status
         order.save()
+        
+        # 📱 Enviar notificación push si el estado cambió
+        if old_status != new_status:
+            try:
+                from users.push_notification_service import PushNotificationService
+                
+                notification_result = PushNotificationService.send_order_status_update_notification(
+                    user=order.user,
+                    order=order,
+                    new_status=new_status
+                )
+                
+                if notification_result.get('success'):
+                    print(f"✅ Notificación enviada a {order.user.username} - Orden #{order.id} cambió a {new_status}")
+                else:
+                    print(f"⚠️ No se pudo enviar notificación: {notification_result.get('error', 'Sin detalles')}")
+                    
+            except Exception as e:
+                # No fallar la petición si falla la notificación
+                print(f"❌ Error al enviar notificación: {e}")
         
         serializer = self.get_serializer(order)
         return Response(serializer.data)
