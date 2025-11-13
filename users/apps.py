@@ -20,6 +20,7 @@ class UsersConfig(AppConfig):
         try:
             import firebase_admin
             from firebase_admin import credentials
+            import json
             
             # Verificar si ya está inicializado
             if firebase_admin._apps:
@@ -27,32 +28,72 @@ class UsersConfig(AppConfig):
                 settings.FIREBASE_INITIALIZED = True
                 return
             
-            # Verificar si existe el archivo de credenciales
-            cred_path = settings.FIREBASE_CREDENTIALS_PATH
+            cred = None
+            project_id = None
             
-            if not os.path.exists(cred_path):
-                logger.warning(f"⚠️ Archivo de credenciales Firebase no encontrado en: {cred_path}")
-                logger.warning("Las notificaciones push NO funcionarán hasta que configures firebase_credentials.json")
-                settings.FIREBASE_INITIALIZED = False
-                return
+            # OPCIÓN 1: Leer desde variable de entorno FIREBASE_CREDENTIALS (PRODUCCIÓN)
+            firebase_creds_json = os.getenv('FIREBASE_CREDENTIALS')
             
-            # Verificar que no sea el archivo placeholder
-            with open(cred_path, 'r') as f:
-                import json
-                data = json.load(f)
-                if data.get('project_id') == 'TU-PROJECT-ID-AQUI':
-                    logger.warning("⚠️ firebase_credentials.json contiene valores placeholder")
-                    logger.warning("Reemplaza el archivo con tus credenciales reales de Firebase")
+            if firebase_creds_json:
+                try:
+                    logger.info("🔍 Intentando cargar Firebase desde variable de entorno FIREBASE_CREDENTIALS...")
+                    cred_dict = json.loads(firebase_creds_json)
+                    project_id = cred_dict.get('project_id')
+                    
+                    # Validar que no sea placeholder
+                    if project_id == 'TU-PROJECT-ID-AQUI':
+                        logger.warning("⚠️ FIREBASE_CREDENTIALS contiene valores placeholder")
+                        settings.FIREBASE_INITIALIZED = False
+                        return
+                    
+                    cred = credentials.Certificate(cred_dict)
+                    logger.info(f"✅ Credenciales cargadas desde FIREBASE_CREDENTIALS env var para proyecto: {project_id}")
+                    
+                except json.JSONDecodeError as e:
+                    logger.error(f"❌ Error al parsear FIREBASE_CREDENTIALS JSON: {e}")
+                    settings.FIREBASE_INITIALIZED = False
+                    return
+                except Exception as e:
+                    logger.error(f"❌ Error al procesar FIREBASE_CREDENTIALS: {e}")
                     settings.FIREBASE_INITIALIZED = False
                     return
             
-            # Inicializar Firebase con el archivo de credenciales
-            cred = credentials.Certificate(cred_path)
-            firebase_admin.initialize_app(cred)
+            # OPCIÓN 2: Leer desde archivo local (DESARROLLO)
+            else:
+                logger.info("🔍 Variable FIREBASE_CREDENTIALS no encontrada, intentando archivo local...")
+                cred_path = settings.FIREBASE_CREDENTIALS_PATH
+                
+                if not os.path.exists(cred_path):
+                    logger.warning(f"⚠️ Archivo de credenciales Firebase no encontrado en: {cred_path}")
+                    logger.warning("Las notificaciones push NO funcionarán hasta que configures:")
+                    logger.warning("1. Variable de entorno FIREBASE_CREDENTIALS (producción)")
+                    logger.warning("2. O archivo firebase_credentials.json (desarrollo)")
+                    settings.FIREBASE_INITIALIZED = False
+                    return
+                
+                # Leer y validar archivo
+                with open(cred_path, 'r') as f:
+                    data = json.load(f)
+                    project_id = data.get('project_id')
+                    
+                    if project_id == 'TU-PROJECT-ID-AQUI':
+                        logger.warning("⚠️ firebase_credentials.json contiene valores placeholder")
+                        logger.warning("Reemplaza el archivo con tus credenciales reales de Firebase")
+                        settings.FIREBASE_INITIALIZED = False
+                        return
+                
+                cred = credentials.Certificate(cred_path)
+                logger.info(f"✅ Credenciales cargadas desde archivo local para proyecto: {project_id}")
             
-            logger.info("✅ Firebase Admin SDK inicializado correctamente")
-            logger.info(f"📱 Notificaciones push ACTIVAS para proyecto: {data.get('project_id')}")
-            settings.FIREBASE_INITIALIZED = True
+            # Inicializar Firebase con las credenciales obtenidas
+            if cred:
+                firebase_admin.initialize_app(cred)
+                logger.info("✅ Firebase Admin SDK inicializado correctamente")
+                logger.info(f"📱 Notificaciones push ACTIVAS para proyecto: {project_id}")
+                settings.FIREBASE_INITIALIZED = True
+            else:
+                logger.error("❌ No se pudieron obtener credenciales de Firebase")
+                settings.FIREBASE_INITIALIZED = False
             
         except ImportError:
             logger.warning("⚠️ firebase-admin no está instalado")
