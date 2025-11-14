@@ -11,6 +11,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from .models import Order, OrderItem
@@ -35,6 +36,13 @@ class IsOwnerOrAdmin(permissions.BasePermission):
         return obj.user == request.user or request.user.is_staff
 
 
+class OrderPagination(PageNumberPagination):
+    """Custom pagination for orders - 100 items per page to balance performance"""
+    page_size = 100
+    page_size_query_param = 'page_size'
+    max_page_size = 500
+
+
 class OrderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet para ver órdenes. La creación se manejará en un endpoint aparte.
@@ -43,6 +51,7 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
+    pagination_class = OrderPagination  # Enable pagination to prevent timeouts
 
     def get_queryset(self):
         user = self.request.user
@@ -51,10 +60,10 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
             'items',                      # Prefetch OrderItems
             'items__product',             # Prefetch Products within items
             'items__product__category'    # Prefetch Category within products
-        ).select_related('user')          # Join User table for user field
+        ).select_related('user').order_by('-created_at')  # Most recent first
         
         if user.is_staff:
-            return base_queryset.all()
+            return base_queryset
         return base_queryset.filter(user=user)
 
 
