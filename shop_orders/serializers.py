@@ -11,14 +11,14 @@ class SimpleCategorySerializer(serializers.ModelSerializer):
 
 
 class SimpleProductSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
+    """Simplified product serializer for orders - optimized to use prefetched data"""
     category_details = SimpleCategorySerializer(source='category', read_only=True)
     
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'description', 'price', 'stock',
-            'category', 'category_name', 'category_details', 'image_url',
+            'category', 'category_details', 'image_url',
             'warranty_info', 'is_active'
         ]
 
