@@ -4,6 +4,8 @@ from products.serializers import ProductSerializer
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)  # Include full product details
+    
     class Meta:
         model = OrderItem
         fields = ['id', 'product', 'quantity', 'price']

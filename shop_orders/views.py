@@ -46,9 +46,15 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        # Optimize query to prevent N+1 problem by prefetching related items and products
+        base_queryset = Order.objects.prefetch_related(
+            'items',              # Prefetch OrderItems
+            'items__product'      # Prefetch Products within items
+        ).select_related('user')  # Join User table for user field
+        
         if user.is_staff:
-            return Order.objects.all()
-        return Order.objects.filter(user=user)
+            return base_queryset.all()
+        return base_queryset.filter(user=user)
 
 
 class CreateOrderView(APIView):
