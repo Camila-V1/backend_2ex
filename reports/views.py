@@ -205,13 +205,13 @@ class DynamicReportParserView(APIView):
         # 8. Extraer fechas
         current_year = datetime.now().year
         
-        # 8.1 Fechas específicas
+        # 8.1 Fechas específicas completas (dd/mm/yyyy al dd/mm/yyyy)
         date_range_pattern = r'del?\s+(\d{1,2}[/-]\d{1,2}[/-]\d{4}|\d{4}-\d{2}-\d{2})\s+al?\s+(\d{1,2}[/-]\d{1,2}[/-]\d{4}|\d{4}-\d{2}-\d{2})'
         match = re.search(date_range_pattern, prompt_lower)
         
         if match:
             start_str, end_str = match.groups()
-            logger.info(f"📅 Rango de fechas detectado: {start_str} al {end_str}")
+            logger.info(f"📅 Rango de fechas completas detectado: {start_str} al {end_str}")
             
             for date_format in ['%d/%m/%Y', '%d-%m-%Y', '%Y-%m-%d']:
                 try:
@@ -222,7 +222,38 @@ class DynamicReportParserView(APIView):
                 except ValueError:
                     continue
         
-        # 8.2 Nombres de meses
+        # 8.2 Días específicos dentro de un mes (del 1 al 15 de octubre)
+        if not parsed['start_date']:
+            # Detectar patrón: "del [día] al [día] de [mes]"
+            day_range_pattern = r'del?\s+(\d{1,2})\s+al?\s+(\d{1,2})\s+de\s+(\w+)'
+            match = re.search(day_range_pattern, prompt_lower)
+            
+            if match:
+                start_day, end_day, mes_nombre = match.groups()
+                
+                meses = {
+                    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
+                    "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
+                    "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
+                }
+                
+                if mes_nombre in meses:
+                    num_mes = meses[mes_nombre]
+                    
+                    # Buscar año en el prompt, si no usa el actual
+                    year_match = re.search(r'\b(20\d{2})\b', prompt_lower)
+                    if year_match:
+                        current_year = int(year_match.group(1))
+                    
+                    try:
+                        parsed['start_date'] = datetime(current_year, num_mes, int(start_day)).date()
+                        parsed['end_date'] = datetime(current_year, num_mes, int(end_day)).date()
+                        logger.info(f"📅 Días específicos detectados: {start_day} al {end_day} de {mes_nombre.upper()}")
+                        logger.info(f"✅ Rango calculado: {parsed['start_date']} a {parsed['end_date']}")
+                    except ValueError as e:
+                        logger.warning(f"⚠️ Error al parsear días: {e}")
+        
+        # 8.3 Nombres de meses completos (todo el mes)
         if not parsed['start_date']:
             meses = {
                 "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
@@ -232,7 +263,7 @@ class DynamicReportParserView(APIView):
             
             for nombre_mes, num_mes in meses.items():
                 if nombre_mes in prompt_lower:
-                    logger.info(f"📅 Mes detectado: {nombre_mes.upper()} ({num_mes})")
+                    logger.info(f"📅 Mes completo detectado: {nombre_mes.upper()} ({num_mes})")
                     
                     year_match = re.search(r'\b(20\d{2})\b', prompt_lower)
                     if year_match:
@@ -244,10 +275,10 @@ class DynamicReportParserView(APIView):
                     
                     parsed['start_date'] = primer_dia
                     parsed['end_date'] = ultimo_dia
-                    logger.info(f"✅ Rango calculado: {parsed['start_date']} a {parsed['end_date']}")
+                    logger.info(f"✅ Rango calculado (mes completo): {parsed['start_date']} a {parsed['end_date']}")
                     break
         
-        # 8.3 Mes actual por defecto
+        # 8.4 Mes actual por defecto
         if not parsed['start_date']:
             logger.info(f"⚠️ No se detectó fecha, usando mes actual")
             today = datetime.now()
