@@ -48,9 +48,10 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
         user = self.request.user
         # Optimize query to prevent N+1 problem by prefetching related items and products
         base_queryset = Order.objects.prefetch_related(
-            'items',              # Prefetch OrderItems
-            'items__product'      # Prefetch Products within items
-        ).select_related('user')  # Join User table for user field
+            'items',                      # Prefetch OrderItems
+            'items__product',             # Prefetch Products within items
+            'items__product__category'    # Prefetch Category within products
+        ).select_related('user')          # Join User table for user field
         
         if user.is_staff:
             return base_queryset.all()

@@ -1,10 +1,30 @@
 from rest_framework import serializers
 from .models import Order, OrderItem
-from products.serializers import ProductSerializer
+from products.models import Category, Product
+
+
+# Simplified serializers for order contexts (no reviews to avoid N+1 queries)
+class SimpleCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
+
+class SimpleProductSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    category_details = SimpleCategorySerializer(source='category', read_only=True)
+    
+    class Meta:
+        model = Product
+        fields = [
+            'id', 'name', 'description', 'price', 'stock',
+            'category', 'category_name', 'category_details', 'image_url',
+            'warranty_info', 'is_active'
+        ]
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)  # Include full product details
+    product = SimpleProductSerializer(read_only=True)  # Simplified product without reviews
     
     class Meta:
         model = OrderItem
