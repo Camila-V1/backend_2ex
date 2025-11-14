@@ -3,28 +3,17 @@ from .models import Order, OrderItem
 from products.models import Category, Product
 
 
-# Simplified serializers for order contexts (no reviews to avoid N+1 queries)
-class SimpleCategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name']
-
-
+# Ultra-simplified serializers for order contexts - NO nested serializers to avoid N+1
 class SimpleProductSerializer(serializers.ModelSerializer):
-    """Simplified product serializer for orders - optimized to use prefetched data"""
-    category_details = SimpleCategorySerializer(source='category', read_only=True)
+    """Minimal product serializer - only basic fields, no relations"""
     
     class Meta:
         model = Product
-        fields = [
-            'id', 'name', 'description', 'price', 'stock',
-            'category_details', 'image_url',
-            'warranty_info', 'is_active'
-        ]
+        fields = ['id', 'name', 'description', 'price', 'stock', 'image_url', 'warranty_info', 'is_active']
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = SimpleProductSerializer(read_only=True)  # Simplified product without reviews
+    product = SimpleProductSerializer(read_only=True)
     
     class Meta:
         model = OrderItem
