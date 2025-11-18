@@ -223,40 +223,26 @@ class DynamicReportParserView(APIView):
                     continue
         
         # 8.2 Días específicos dentro de un mes (del 1 al 15 de octubre)
+        # PRIORIDAD: Ejecutar ANTES que mes completo
         if not parsed['start_date']:
             # Diccionario para convertir números en palabras a dígitos
             numeros_texto = {
-                "primero": 1, "primer": 1, "uno": 1, "1": 1,
-                "dos": 2, "2": 2,
-                "tres": 3, "3": 3,
-                "cuatro": 4, "4": 4,
-                "cinco": 5, "5": 5,
-                "seis": 6, "6": 6,
-                "siete": 7, "7": 7,
-                "ocho": 8, "8": 8,
-                "nueve": 9, "9": 9,
-                "diez": 10, "10": 10,
-                "once": 11, "11": 11,
-                "doce": 12, "12": 12,
-                "trece": 13, "13": 13,
-                "catorce": 14, "14": 14,
-                "quince": 15, "15": 15,
-                "dieciséis": 16, "dieciseis": 16, "16": 16,
-                "diecisiete": 17, "17": 17,
-                "dieciocho": 18, "18": 18,
-                "diecinueve": 19, "19": 19,
-                "veinte": 20, "20": 20,
-                "veintiuno": 21, "veinte y uno": 21, "21": 21,
-                "veintidós": 22, "veintidos": 22, "veinte y dos": 22, "22": 22,
-                "veintitrés": 23, "veintitres": 23, "veinte y tres": 23, "23": 23,
-                "veinticuatro": 24, "veinte y cuatro": 24, "24": 24,
-                "veinticinco": 25, "veinte y cinco": 25, "25": 25,
-                "veintiséis": 26, "veintiseis": 26, "veinte y seis": 26, "26": 26,
-                "veintisiete": 27, "veinte y siete": 27, "27": 27,
-                "veintiocho": 28, "veinte y ocho": 28, "28": 28,
-                "veintinueve": 29, "veinte y nueve": 29, "29": 29,
-                "treinta": 30, "30": 30,
-                "treinta y uno": 31, "31": 31
+                "primero": 1, "primer": 1, "uno": 1,
+                "dos": 2, "tres": 3, "cuatro": 4, "cinco": 5,
+                "seis": 6, "siete": 7, "ocho": 8, "nueve": 9,
+                "diez": 10, "once": 11, "doce": 12, "trece": 13,
+                "catorce": 14, "quince": 15, "dieciséis": 16, "dieciseis": 16,
+                "diecisiete": 17, "dieciocho": 18, "diecinueve": 19,
+                "veinte": 20, "veintiuno": 21, "veinte y uno": 21,
+                "veintidós": 22, "veintidos": 22, "veinte y dos": 22,
+                "veintitrés": 23, "veintitres": 23, "veinte y tres": 23,
+                "veinticuatro": 24, "veinte y cuatro": 24,
+                "veinticinco": 25, "veinte y cinco": 25,
+                "veintiséis": 26, "veintiseis": 26, "veinte y seis": 26,
+                "veintisiete": 27, "veinte y siete": 27,
+                "veintiocho": 28, "veinte y ocho": 28,
+                "veintinueve": 29, "veinte y nueve": 29,
+                "treinta": 30, "treinta y uno": 31
             }
             
             meses = {
@@ -265,10 +251,9 @@ class DynamicReportParserView(APIView):
                 "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
             }
             
-            # Patrón flexible: acepta números O palabras
-            # "del 1 al 5 de septiembre" O "del uno al cinco de septiembre"
-            # Usar lookahead para asegurar que NO sea solo el nombre del mes
-            day_range_pattern = r'del?\s+(\d{1,2}|[\w\sáéíóúñ]+?)\s+al?\s+(\d{1,2}|[\w\sáéíóúñ]+?)\s+de\s+(\w+)'
+            # Patrón que requiere "del" y "al" explícitamente
+            # Captura: "del 1 al 5 de septiembre" o "del uno al cinco de septiembre"
+            day_range_pattern = r'\bdel?\s+(\d{1,2}|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieciséis|diecisiete|dieciocho|diecinueve|veinte|veintiuno|veintidós|veintitrés|veinticuatro|veinticinco|veintiséis|veintisiete|veintiocho|veintinueve|treinta|primero|primer)\s+al?\s+(\d{1,2}|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieciséis|diecisiete|dieciocho|diecinueve|veinte|veintiuno|veintidós|veintitrés|veinticuatro|veinticinco|veintiséis|veintisiete|veintiocho|veintinueve|treinta|treinta y uno)\s+de\s+(\w+)\b'
             match = re.search(day_range_pattern, prompt_lower)
             
             if match:
@@ -282,7 +267,7 @@ class DynamicReportParserView(APIView):
                 start_day = numeros_texto.get(start_day_str)
                 end_day = numeros_texto.get(end_day_str)
                 
-                # Si no se encontró como texto, intentar convertir directamente
+                # Si no se encontró como texto, intentar convertir directamente como dígito
                 if start_day is None:
                     try:
                         start_day = int(start_day_str)
@@ -312,34 +297,30 @@ class DynamicReportParserView(APIView):
                         logger.warning(f"⚠️ Error al parsear días: {e}")
         
         # 8.3 Nombres de meses completos (todo el mes)
-        # IMPORTANTE: Solo si NO hay patrón "del X al Y" antes
+        # Solo si NO hay patrón "del X al Y de mes"
         if not parsed['start_date']:
-            # Verificar que NO haya un patrón de rango de días primero
-            tiene_rango_dias = re.search(r'del?\s+\d{1,2}\s+al?\s+\d{1,2}', prompt_lower)
+            meses = {
+                "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
+                "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
+                "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
+            }
             
-            if not tiene_rango_dias:  # Solo si no hay rango explícito
-                meses = {
-                    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
-                    "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
-                    "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
-                }
-                
-                for nombre_mes, num_mes in meses.items():
-                    if nombre_mes in prompt_lower:
-                        logger.info(f"📅 Mes completo detectado: {nombre_mes.upper()} ({num_mes})")
-                        
-                        year_match = re.search(r'\b(20\d{2})\b', prompt_lower)
-                        if year_match:
-                            current_year = int(year_match.group(1))
-                        
-                        primer_dia = datetime(current_year, num_mes, 1).date()
-                        ultimo_dia_num = calendar.monthrange(current_year, num_mes)[1]
-                        ultimo_dia = datetime(current_year, num_mes, ultimo_dia_num).date()
-                        
-                        parsed['start_date'] = primer_dia
-                        parsed['end_date'] = ultimo_dia
-                        logger.info(f"✅ Rango calculado (mes completo): {parsed['start_date']} a {parsed['end_date']}")
-                        break
+            for nombre_mes, num_mes in meses.items():
+                if nombre_mes in prompt_lower:
+                    logger.info(f"📅 Mes completo detectado: {nombre_mes.upper()} ({num_mes})")
+                    
+                    year_match = re.search(r'\b(20\d{2})\b', prompt_lower)
+                    if year_match:
+                        current_year = int(year_match.group(1))
+                    
+                    primer_dia = datetime(current_year, num_mes, 1).date()
+                    ultimo_dia_num = calendar.monthrange(current_year, num_mes)[1]
+                    ultimo_dia = datetime(current_year, num_mes, ultimo_dia_num).date()
+                    
+                    parsed['start_date'] = primer_dia
+                    parsed['end_date'] = ultimo_dia
+                    logger.info(f"✅ Rango calculado (mes completo): {parsed['start_date']} a {parsed['end_date']}")
+                    break
         
         # 8.4 Mes actual por defecto
         if not parsed['start_date']:
