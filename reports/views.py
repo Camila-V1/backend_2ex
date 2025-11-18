@@ -267,7 +267,8 @@ class DynamicReportParserView(APIView):
             
             # Patrón flexible: acepta números O palabras
             # "del 1 al 5 de septiembre" O "del uno al cinco de septiembre"
-            day_range_pattern = r'del?\s+([\w\sáéíóúñ]+?)\s+al?\s+([\w\sáéíóúñ]+?)\s+de\s+(\w+)'
+            # Usar lookahead para asegurar que NO sea solo el nombre del mes
+            day_range_pattern = r'del?\s+(\d{1,2}|[\w\sáéíóúñ]+?)\s+al?\s+(\d{1,2}|[\w\sáéíóúñ]+?)\s+de\s+(\w+)'
             match = re.search(day_range_pattern, prompt_lower)
             
             if match:
