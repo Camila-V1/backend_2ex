@@ -224,20 +224,77 @@ class DynamicReportParserView(APIView):
         
         # 8.2 Días específicos dentro de un mes (del 1 al 15 de octubre)
         if not parsed['start_date']:
-            # Detectar patrón: "del [día] al [día] de [mes]"
-            day_range_pattern = r'del?\s+(\d{1,2})\s+al?\s+(\d{1,2})\s+de\s+(\w+)'
+            # Diccionario para convertir números en palabras a dígitos
+            numeros_texto = {
+                "primero": 1, "primer": 1, "uno": 1, "1": 1,
+                "dos": 2, "2": 2,
+                "tres": 3, "3": 3,
+                "cuatro": 4, "4": 4,
+                "cinco": 5, "5": 5,
+                "seis": 6, "6": 6,
+                "siete": 7, "7": 7,
+                "ocho": 8, "8": 8,
+                "nueve": 9, "9": 9,
+                "diez": 10, "10": 10,
+                "once": 11, "11": 11,
+                "doce": 12, "12": 12,
+                "trece": 13, "13": 13,
+                "catorce": 14, "14": 14,
+                "quince": 15, "15": 15,
+                "dieciséis": 16, "dieciseis": 16, "16": 16,
+                "diecisiete": 17, "17": 17,
+                "dieciocho": 18, "18": 18,
+                "diecinueve": 19, "19": 19,
+                "veinte": 20, "20": 20,
+                "veintiuno": 21, "veinte y uno": 21, "21": 21,
+                "veintidós": 22, "veintidos": 22, "veinte y dos": 22, "22": 22,
+                "veintitrés": 23, "veintitres": 23, "veinte y tres": 23, "23": 23,
+                "veinticuatro": 24, "veinte y cuatro": 24, "24": 24,
+                "veinticinco": 25, "veinte y cinco": 25, "25": 25,
+                "veintiséis": 26, "veintiseis": 26, "veinte y seis": 26, "26": 26,
+                "veintisiete": 27, "veinte y siete": 27, "27": 27,
+                "veintiocho": 28, "veinte y ocho": 28, "28": 28,
+                "veintinueve": 29, "veinte y nueve": 29, "29": 29,
+                "treinta": 30, "30": 30,
+                "treinta y uno": 31, "31": 31
+            }
+            
+            meses = {
+                "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
+                "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
+                "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
+            }
+            
+            # Patrón flexible: acepta números O palabras
+            # "del 1 al 5 de septiembre" O "del uno al cinco de septiembre"
+            day_range_pattern = r'del?\s+([\w\sáéíóúñ]+?)\s+al?\s+([\w\sáéíóúñ]+?)\s+de\s+(\w+)'
             match = re.search(day_range_pattern, prompt_lower)
             
             if match:
-                start_day, end_day, mes_nombre = match.groups()
+                start_day_str, end_day_str, mes_nombre = match.groups()
+                start_day_str = start_day_str.strip()
+                end_day_str = end_day_str.strip()
                 
-                meses = {
-                    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
-                    "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
-                    "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
-                }
+                logger.info(f"🔍 Detectado rango de días: '{start_day_str}' al '{end_day_str}' de '{mes_nombre}'")
                 
-                if mes_nombre in meses:
+                # Convertir a números
+                start_day = numeros_texto.get(start_day_str)
+                end_day = numeros_texto.get(end_day_str)
+                
+                # Si no se encontró como texto, intentar convertir directamente
+                if start_day is None:
+                    try:
+                        start_day = int(start_day_str)
+                    except ValueError:
+                        logger.warning(f"⚠️ No se pudo convertir '{start_day_str}' a número")
+                
+                if end_day is None:
+                    try:
+                        end_day = int(end_day_str)
+                    except ValueError:
+                        logger.warning(f"⚠️ No se pudo convertir '{end_day_str}' a número")
+                
+                if start_day and end_day and mes_nombre in meses:
                     num_mes = meses[mes_nombre]
                     
                     # Buscar año en el prompt, si no usa el actual
@@ -246,8 +303,8 @@ class DynamicReportParserView(APIView):
                         current_year = int(year_match.group(1))
                     
                     try:
-                        parsed['start_date'] = datetime(current_year, num_mes, int(start_day)).date()
-                        parsed['end_date'] = datetime(current_year, num_mes, int(end_day)).date()
+                        parsed['start_date'] = datetime(current_year, num_mes, start_day).date()
+                        parsed['end_date'] = datetime(current_year, num_mes, end_day).date()
                         logger.info(f"📅 Días específicos detectados: {start_day} al {end_day} de {mes_nombre.upper()}")
                         logger.info(f"✅ Rango calculado: {parsed['start_date']} a {parsed['end_date']}")
                     except ValueError as e:
