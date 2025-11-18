@@ -253,8 +253,12 @@ class DynamicReportParserView(APIView):
             
             # Patrón que requiere "del" y "al" explícitamente
             # Captura: "del 1 al 5 de septiembre" o "del uno al cinco de septiembre"
-            day_range_pattern = r'\bdel?\s+(\d{1,2}|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieciséis|diecisiete|dieciocho|diecinueve|veinte|veintiuno|veintidós|veintitrés|veinticuatro|veinticinco|veintiséis|veintisiete|veintiocho|veintinueve|treinta|primero|primer)\s+al?\s+(\d{1,2}|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieciséis|diecisiete|dieciocho|diecinueve|veinte|veintiuno|veintidós|veintitrés|veinticuatro|veinticinco|veintiséis|veintisiete|veintiocho|veintinueve|treinta|treinta y uno)\s+de\s+(\w+)\b'
+            # IMPORTANTE: Debe matchear PRIMERO para evitar que patrón 8.3 lo capture
+            day_range_pattern = r'\bdel?\s+(\d{1,2}|primero?|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieciséis|diecisiete|dieciocho|diecinueve|veinte|veintiuno|veintidós|veintitrés|veinticuatro|veinticinco|veintiséis|veintisiete|veintiocho|veintinueve|treinta(?:\s+y\s+uno)?)\s+(?:de\s+\w+\s+)?al?\s+(\d{1,2}|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieciséis|diecisiete|dieciocho|diecinueve|veinte|veintiuno|veintidós|veintitrés|veinticuatro|veinticinco|veintiséis|veintisiete|veintiocho|veintinueve|treinta(?:\s+y\s+uno)?)\s+de\s+(\w+)\b'
             match = re.search(day_range_pattern, prompt_lower)
+            
+            logger.info(f"🔍 [8.2] Buscando patrón de rango de días en: '{prompt_lower}'")
+            logger.info(f"🔍 [8.2] Match encontrado: {bool(match)}")
             
             if match:
                 start_day_str, end_day_str, mes_nombre = match.groups()
@@ -305,22 +309,29 @@ class DynamicReportParserView(APIView):
                 "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
             }
             
-            for nombre_mes, num_mes in meses.items():
-                if nombre_mes in prompt_lower:
-                    logger.info(f"📅 Mes completo detectado: {nombre_mes.upper()} ({num_mes})")
-                    
-                    year_match = re.search(r'\b(20\d{2})\b', prompt_lower)
-                    if year_match:
-                        current_year = int(year_match.group(1))
-                    
-                    primer_dia = datetime(current_year, num_mes, 1).date()
-                    ultimo_dia_num = calendar.monthrange(current_year, num_mes)[1]
-                    ultimo_dia = datetime(current_year, num_mes, ultimo_dia_num).date()
-                    
-                    parsed['start_date'] = primer_dia
-                    parsed['end_date'] = ultimo_dia
-                    logger.info(f"✅ Rango calculado (mes completo): {parsed['start_date']} a {parsed['end_date']}")
-                    break
+            # VERIFICAR PRIMERO que NO haya un patrón de rango de días
+            tiene_rango = re.search(r'\bdel?\s+\d{1,2}\s+(?:de\s+\w+\s+)?al?\s+\d{1,2}\s+de\s+\w+', prompt_lower)
+            logger.info(f"🔍 [8.3] ¿Tiene patrón de rango?: {bool(tiene_rango)}")
+            
+            if not tiene_rango:
+                for nombre_mes, num_mes in meses.items():
+                    if nombre_mes in prompt_lower:
+                        logger.info(f"📅 Mes completo detectado: {nombre_mes.upper()} ({num_mes})")
+                        
+                        year_match = re.search(r'\b(20\d{2})\b', prompt_lower)
+                        if year_match:
+                            current_year = int(year_match.group(1))
+                        
+                        primer_dia = datetime(current_year, num_mes, 1).date()
+                        ultimo_dia_num = calendar.monthrange(current_year, num_mes)[1]
+                        ultimo_dia = datetime(current_year, num_mes, ultimo_dia_num).date()
+                        
+                        parsed['start_date'] = primer_dia
+                        parsed['end_date'] = ultimo_dia
+                        logger.info(f"✅ Rango calculado (mes completo): {parsed['start_date']} a {parsed['end_date']}")
+                        break
+            else:
+                logger.info(f"⏭️ [8.3] Saltando mes completo porque hay rango de días")
         
         # 8.4 Mes actual por defecto
         if not parsed['start_date']:
