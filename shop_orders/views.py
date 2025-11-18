@@ -472,14 +472,63 @@ class AdminOrderViewSet(viewsets.ModelViewSet):
     - GET /api/admin/orders/{id}/ - Detalle de una orden
     - PATCH /api/admin/orders/{id}/ - Actualizar estado de orden
     - DELETE /api/admin/orders/{id}/ - Eliminar orden
+    
+    🔍 Soporta filtros:
+    - ?status=DELIVERED
+    - ?user_id=7
+    - ?start_date=2025-11-01&end_date=2025-11-17
     """
     serializer_class = OrderSerializer
     permission_classes = [IsAdminOrManager]
+    pagination_class = OrderPagination  # ✅ Agregar paginación (50 por página)
     # Forzar que el lookup de detail use solo IDs numéricos para evitar colisiones
     # con rutas estáticas como 'dashboard' o 'users' que de otro modo podrían
     # coincidir con el patrón <pk> y producir 404.
     lookup_value_regex = r"\d+"
-    queryset = Order.objects.all().order_by('-created_at')
+    
+    def get_queryset(self):
+        """
+        Retorna queryset optimizado con prefetch y filtros dinámicos
+        """
+        # Base queryset optimizado para evitar N+1
+        queryset = Order.objects.prefetch_related(
+            'items',
+            'items__product',
+            'items__product__category'
+        ).select_related('user').order_by('-created_at')
+        
+        # 🔍 FILTROS DINÁMICOS
+        # Filtro por usuario
+        user_id = self.request.query_params.get('user_id', None)
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+        
+        # Filtro por estado
+        status_filter = self.request.query_params.get('status', None)
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        
+        # Filtro por rango de fechas
+        start_date = self.request.query_params.get('start_date', None)
+        end_date = self.request.query_params.get('end_date', None)
+        
+        if start_date:
+            from datetime import datetime
+            try:
+                start = datetime.strptime(start_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(created_at__date__gte=start)
+            except ValueError:
+                pass
+        
+        if end_date:
+            from datetime import datetime
+            try:
+                end = datetime.strptime(end_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(created_at__date__lte=end)
+            except ValueError:
+                pass
+        
+        return queryset
     
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):
