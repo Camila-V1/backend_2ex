@@ -37,8 +37,8 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 
 
 class OrderPagination(PageNumberPagination):
-    """Custom pagination for orders - 100 items per page to balance performance"""
-    page_size = 100
+    """Custom pagination for orders - 50 items per page for better UX"""
+    page_size = 50
     page_size_query_param = 'page_size'
     max_page_size = 500
 
@@ -63,8 +63,42 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
         ).select_related('user').order_by('-created_at')  # Most recent first
         
         if user.is_staff:
-            return base_queryset
-        return base_queryset.filter(user=user)
+            queryset = base_queryset
+        else:
+            queryset = base_queryset.filter(user=user)
+        
+        # 🔍 FILTROS DINÁMICOS
+        # Filtro por usuario (solo admin/manager)
+        user_id = self.request.query_params.get('user_id', None)
+        if user_id and user.is_staff:
+            queryset = queryset.filter(user_id=user_id)
+        
+        # Filtro por estado
+        status_filter = self.request.query_params.get('status', None)
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        
+        # Filtro por rango de fechas
+        start_date = self.request.query_params.get('start_date', None)
+        end_date = self.request.query_params.get('end_date', None)
+        
+        if start_date:
+            from datetime import datetime
+            try:
+                start = datetime.strptime(start_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(created_at__date__gte=start)
+            except ValueError:
+                pass
+        
+        if end_date:
+            from datetime import datetime
+            try:
+                end = datetime.strptime(end_date, '%Y-%m-%d').date()
+                queryset = queryset.filter(created_at__date__lte=end)
+            except ValueError:
+                pass
+        
+        return queryset
 
 
 class CreateOrderView(APIView):
