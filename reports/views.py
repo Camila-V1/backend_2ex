@@ -312,29 +312,34 @@ class DynamicReportParserView(APIView):
                         logger.warning(f"⚠️ Error al parsear días: {e}")
         
         # 8.3 Nombres de meses completos (todo el mes)
+        # IMPORTANTE: Solo si NO hay patrón "del X al Y" antes
         if not parsed['start_date']:
-            meses = {
-                "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
-                "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
-                "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
-            }
+            # Verificar que NO haya un patrón de rango de días primero
+            tiene_rango_dias = re.search(r'del?\s+\d{1,2}\s+al?\s+\d{1,2}', prompt_lower)
             
-            for nombre_mes, num_mes in meses.items():
-                if nombre_mes in prompt_lower:
-                    logger.info(f"📅 Mes completo detectado: {nombre_mes.upper()} ({num_mes})")
-                    
-                    year_match = re.search(r'\b(20\d{2})\b', prompt_lower)
-                    if year_match:
-                        current_year = int(year_match.group(1))
-                    
-                    primer_dia = datetime(current_year, num_mes, 1).date()
-                    ultimo_dia_num = calendar.monthrange(current_year, num_mes)[1]
-                    ultimo_dia = datetime(current_year, num_mes, ultimo_dia_num).date()
-                    
-                    parsed['start_date'] = primer_dia
-                    parsed['end_date'] = ultimo_dia
-                    logger.info(f"✅ Rango calculado (mes completo): {parsed['start_date']} a {parsed['end_date']}")
-                    break
+            if not tiene_rango_dias:  # Solo si no hay rango explícito
+                meses = {
+                    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
+                    "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
+                    "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
+                }
+                
+                for nombre_mes, num_mes in meses.items():
+                    if nombre_mes in prompt_lower:
+                        logger.info(f"📅 Mes completo detectado: {nombre_mes.upper()} ({num_mes})")
+                        
+                        year_match = re.search(r'\b(20\d{2})\b', prompt_lower)
+                        if year_match:
+                            current_year = int(year_match.group(1))
+                        
+                        primer_dia = datetime(current_year, num_mes, 1).date()
+                        ultimo_dia_num = calendar.monthrange(current_year, num_mes)[1]
+                        ultimo_dia = datetime(current_year, num_mes, ultimo_dia_num).date()
+                        
+                        parsed['start_date'] = primer_dia
+                        parsed['end_date'] = ultimo_dia
+                        logger.info(f"✅ Rango calculado (mes completo): {parsed['start_date']} a {parsed['end_date']}")
+                        break
         
         # 8.4 Mes actual por defecto
         if not parsed['start_date']:
